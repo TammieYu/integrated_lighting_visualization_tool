@@ -1,12 +1,1204 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My JavaScript App</title>
-</head>
-<body>
-    <h1>Hello, world!</h1>
-    <script src="script.js"></script>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dashboard</title>
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+		<style>
+			body {
+				background-color: #f0f0f0;
+				font-family: Arial, sans-serif;
+				margin: 0;
+				padding: 20px;
+				overflow-x: hidden; /* Prevent horizontal scroll */
+			}
+			h1,
+			h2,
+			h4,
+			h4,
+			h5,
+			h6 {
+				margin-top: 6px;
+				margin-bottom: 6px;
+				color: #4197b4;
+			}
+			h3 {
+				margin: 0;
+			}
+			.title {
+				font-weight: normal;
+				font-size: 16pt;
+				text-align: left; /* Center the text */
+				margin: 0px; /* Space below the caption */
+				color: #01313c; /* Change text color */
+				padding: 0px;
+				/* border: 2px solid #4caf50; /* Add a border */
+				/* border-radius: 5px; Round the corners of the border */
+			}
+
+			.container {
+				background-color: white;
+				padding: 10px;
+				border: 2px solid #ffffff;
+				border-radius: 8px;
+				box-shadow: 0px 3px 3px rgb(177, 177, 177);
+				/* overflow: scroll; */
+			}
+			.grid-container {
+				display: grid;
+				grid-template-columns: 2fr 3fr;
+				gap: 10px;
+				/* height: 100vh; */
+			}
+			.left-grid-container {
+				display: grid;
+				grid-template-columns: 1fr;
+				grid-auto-rows: 60px 200px 810px;
+				/* gap: 20px; */
+				height: 100%;
+			}
+			.right-grid-container {
+				display: grid;
+				grid-template-columns: 1fr 2fr;
+				grid-auto-rows: 270px 400px 400px;
+				gap: 10px;
+				height: 100%;
+			}
+			.dropdown {
+				/* position: absolute; */
+				background-color: "white";
+				max-height: 27px;
+				border: 2px solid #4197b4;
+				border-radius: 5px;
+				padding: 2px 10px;
+			}
+			.radio {
+				display: inline-block; /* Align radio buttons horizontally */
+				margin-right: 15px; /* Space between buttons */
+			}
+
+			.axis-label {
+				font-size: 12pt;
+			}
+
+			.button {
+				/* margin-top: 10px; */
+				background-color: #4197b4;
+				/* border: #007681; */
+				height: 40px;
+				width: 100px;
+				font-size: 20px;
+				color: white;
+				border: #4197b4 2px solid;
+				border-radius: 5px;
+				transition: background-color 0.3s;
+				/* position: absolute; */
+			}
+
+			.button:hover {
+				opacity: 0.8;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				overflow: scroll;
+			}
+
+			th,
+			td {
+				border: 2px solid #4197b4;
+				padding: 2px;
+				text-align: left;
+			}
+			th {
+				background-color: #4197b4;
+				font-size: 12pt;
+				color: white;
+			}
+			/* .bar {
+				transition: opacity 0.3s;
+			} */
+			.detailed-bars:hover {
+				opacity: 1 !important; /* Ensure the hovered bar is always visible */
+			}
+			.general-bars:hover {
+				opacity: 1 !important; /* Ensure the hovered bar is always visible */
+			}
+			/* Style the tab */
+			.tab {
+				overflow: hidden;
+				border: 1px solid #ccc;
+				/* background-color: #4197b4;s */
+				margin-top: 10px;
+			}
+
+			/* Style the buttons that are used to open the tab content */
+			.tab button {
+				background-color: lightgray;
+				float: left;
+				border: none;
+				outline: none;
+				cursor: pointer;
+				padding: 5px 5px;
+				transition: 0.3s;
+				color: black;
+				font-size: 14pt;
+				width: 50%;
+			}
+
+			/* Change background color of buttons on hover */
+			.tab button:hover {
+				/* background-color: #a5d0df; */
+				opacity: 0.8;
+			}
+
+			/* Create an active/current tablink class */
+			.tab button.active {
+				background-color: #4197b4;
+			}
+
+			/* Style the tab content */
+			.tabcontent {
+				display: none;
+				/* padding: 6px 20px; */
+				/* border: 2px solid lightgray; */
+				border-top: none;
+				animation: fadeEffect 1s;
+				height: 75%;
+			}
+			@keyframes fadeEffect {
+				from {
+					opacity: 0;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<!-- <h1 id="title">Dashboard</h1> -->
+		<div class="grid-container">
+			<div class="left-grid-container" style="gap: 10px">
+				<div class="container" , style="display: flex; column-gap: 17px; grid-column: 1; grid-row: 1">
+					<h3 class="title">Select climate zone</h3>
+					<div id="climate-zone-dropdown"></div>
+				</div>
+				<div class="container" style="grid-column: 1; grid-row: 2">
+					<h3 class="title">Select strategy to add to strategy library</h3>
+					<div style="display: flex; column-gap: 80px; margin-top: 10px">
+						<h4>Heating system</h4>
+						<div id="heating-system-radio"></div>
+					</div>
+					<div style="display: flex; column-gap: 80px; margin-top: 5px">
+						<h4>Glazing material</h4>
+						<div id="glazing-material-dropdown"></div>
+					</div>
+					<div style="display: flex; column-gap: 74px; margin-top: 5px">
+						<h4>Shading material</h4>
+						<div id="shading-material-dropdown"></div>
+					</div>
+					<div style="display: flex; column-gap: 64px; margin-top: 5px">
+						<h4>Daylight Dimming</h4>
+						<div id="daylight-dimming-radio"></div>
+					</div>
+					<div style="display: flex; translate: 450px -50px">
+						<button class="button" id="strategy-add-button">Add</button>
+					</div>
+				</div>
+				<div class="container" style="grid-column: 1; grid-row: 3">
+					<h3 class="title" id="climate-energy-bar-title"></h3>
+					<div class="bar-chart" id="general-energy-stacked-bar-plot"></div>
+					<div
+						id="tooltip"
+						style="
+							position: absolute;
+							background-color: white;
+							border: 1px solid black;
+							padding: 5px;
+							display: none;
+						"
+					></div>
+				</div>
+			</div>
+			<div class="right-grid-container">
+				<div class="container" style="gap: 20px; grid-column: 1/3; grid-row: 1; overflow: scroll">
+					<h3 class="title">Strategy Library</h3>
+					<br />
+					<table id="strategy-library-table">
+						<thead>
+							<tr>
+								<th></th>
+								<th></th>
+								<th>Climate zone</th>
+								<!-- <th>Strategy ID</th> -->
+								<th>Heating system</th>
+								<th>Glazing material</th>
+								<th>Shading material</th>
+								<th>Daylight dimming</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<div class="container" style="grid-column: 1; grid-row: 2">
+					<h3 class="title">Performance Evaluation</h3>
+					<p style="color: gray; font-size: 12pt; font-style: italic; margin: 2px">
+						**Legend: see strategy library above
+					</p>
+					<div id="performance-radar-plot"></div>
+				</div>
+				<div class="container" style="grid-column: 2; grid-row: 2">
+					<h3 class="title">Peak Load</h3>
+					<p style="color: gray; font-size: 12pt; font-style: italic; margin: 2px">
+						**Legend: see strategy library above
+					</p>
+					<div class="tab">
+						<button class="tablinks" onclick="selectPeakLoadTab(event, 'heating' )" id="defaultPeakLoadTab">
+							Heating
+						</button>
+						<button class="tablinks" onclick="selectPeakLoadTab(event, 'cooling')">Cooling</button>
+					</div>
+					<!-- Tab content -->
+					<div id="heating" class="tabcontent">
+						<div id="detailed-peak-heating-load-line-plot"></div>
+					</div>
+
+					<div id="cooling" class="tabcontent">
+						<div id="detailed-peak-cooling-load-line-plot"></div>
+					</div>
+				</div>
+				<div class="container" style="grid-column: 1/3; grid-row: 3">
+					<h3 class="title">Monthly Energy for Selected Strategy</h3>
+					<p style="color: gray; font-size: 12pt; font-style: italic; margin: 2px">
+						**Legend: see strategy library above
+					</p>
+					<div id="detailed-energy-stacked-bar-plot"></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const colorSchemes = {
+				default: [
+					"#4e79a7",
+					"#f28e2b",
+					"#e15759",
+					"#76b7b2",
+					"#59a14f",
+					"#b07aa1",
+					"#df99b2",
+					"#9c755f",
+					"#bab0ac",
+					"#edc948",
+				],
+				light: [
+					"#a0cbe8",
+					"#ffbe7d",
+					"#ff9d9a",
+					"#a8d1ce",
+					"#8cd17d",
+					"#d4a6c8",
+					"#fabfd2",
+					"#d7b5a6",
+					"#ddd8d6",
+					"#f4de8e",
+				],
+				dark: [
+					"#3e6084",
+					"#dc740e",
+					"#d92c2e",
+					"#499894",
+					"#467f3e",
+					"#9b5c89",
+					"#d37295",
+					"#7c5d4c",
+					"#78706e",
+					"#b6992d",
+				],
+			};
+
+			const createColorScale = (colorRange) => {
+				return d3
+					.scaleOrdinal()
+					.domain(d3.range(10)) // Generates [0, 1, 2, ..., 9]
+					.range(colorRange);
+			};
+
+			let mediumColorScale = createColorScale(colorSchemes.default);
+			let lightColorScale = createColorScale(colorSchemes.light);
+			let darkColorScale = createColorScale(colorSchemes.dark);
+
+			const heatingSystemRadioOptions = [
+				{ id: "gas", label: "Gas Furnace" },
+				{ id: "hp", label: "Heat Pump" },
+			];
+			const daylightDimmingRadioOptions = [
+				{ id: "dimming", label: "On" },
+				{ id: "nodimming", label: "Off" },
+			];
+
+			const climateZoneDropdownOptions = [
+				{ id: "1A_USA_FL_MIAMI", label: "1A: Very Hot Humid (Miami, Florida)" },
+				{ id: "2A_USA_TX_HOUSTON", label: "2A: Hot Humid (Houston, Texas)" },
+				{ id: "2B_USA_AZ_PHOENIX", label: "2B: Hot Dry (Phoenix, Arizona)" },
+				{ id: "3A_USA_GA_ATLANTA", label: "3A: Warm Humid (Atlanta, Georgia)" },
+				{ id: "3B_USA_CA_LOS_ANGELES", label: "3B: Warm Dry (Los Angeles, California)" },
+				{ id: "3B_USA_NV_LAS_VEGAS", label: "3B: Warm Dry (Las Vegas, Nevada)" },
+				{ id: "3C_USA_CA_SAN_FRANCISCO", label: "3C: Warm Marine (San Francisco, California)" },
+				{ id: "4A_USA_MD_BALTIMORE", label: "4A: Mixed Humid (Baltimore, Maryland)" },
+				{ id: "4B_USA_NM_ALBUQUERQUE", label: "4B: Mixed Dry (Albuquerque, New Mexico)" },
+				{ id: "4C_USA_WA_SEATTLE", label: "4C: Mixed Marine (Seattle, Washington)" },
+				{ id: "5A_USA_IL_CHICAGO", label: "5A: Cool Humid (Chicago, Illinois)" },
+				{ id: "5B_USA_CO_BOULDER", label: "5B: Cool Dry (Boulder, Colorado)" },
+				{ id: "6A_USA_MN_MINNEAPOLIS", label: "6A: Cool Humid (Minneapolis, Minnesota)" },
+				{ id: "6B_USA_MT_HELENA", label: "6B: Cool Dry (Helena, Montana)" },
+				{ id: "7A_USA_MN_DULUTH", label: "7: Very Cool (Duluth, Minnesota)" },
+				{ id: "8A_USA_AK_FAIRBANKS", label: "8: Subartic/Arctic (Fairbanks, Alaska)" },
+			];
+			const glazingMaterialDropdownOptions = [{ id: "dblclr", label: "Double Clear - Clear" }];
+			const shadingMaterialDropdownOptions = [
+				{ id: "noshades", label: "None" },
+				{ id: "extshdt3dark", label: "Exterior Shade - tvis 3% Dark" },
+				{ id: "intshdt3dark", label: "Interior Shade - tvis 3% Dark" },
+			];
+
+			function genRadio(name, options) {
+				const radioGroup = d3
+					.select(`#${name}`)
+					.selectAll("div")
+					.data(options)
+					.enter()
+					.append("div")
+					.attr("class", "radio");
+
+				radioGroup
+					.append("input")
+					.attr("type", "radio")
+					.attr("name", name) // Group name for radio buttons
+					.attr("id", (d) => d.id)
+					.attr("value", (d) => d.label)
+					.property("checked", (d, i) => i === 0);
+
+				radioGroup
+					.append("label")
+					.attr("for", (d) => d.id)
+					.text((d) => d.label);
+			}
+
+			function genDropdown(name, options) {
+				const dropdown = d3
+					.select(`#${name}`)
+					.append("select")
+					.attr("id", `${name}-select`)
+					.attr("class", "dropdown");
+
+				dropdown
+					.selectAll("option")
+					.data(options)
+					.enter()
+					.append("option")
+					.attr("value", (d) => d.id)
+					.text((d) => d.label);
+			}
+
+			function getLabel(options, id) {
+				return options.find((d) => d.id === id).label;
+			}
+
+			genDropdown("climate-zone-dropdown", climateZoneDropdownOptions);
+			genDropdown("glazing-material-dropdown", glazingMaterialDropdownOptions);
+			genDropdown("shading-material-dropdown", shadingMaterialDropdownOptions);
+
+			genRadio("heating-system-radio", heatingSystemRadioOptions);
+			genRadio("daylight-dimming-radio", daylightDimmingRadioOptions);
+
+			let resultData = "";
+
+			let strategyLibrary = [];
+			let stack = d3.stack().keys(["lightingEnergy", "heatingEnergy", "coolingEnergy"]);
+			let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+			dataUrl = "Data/Results/compile/Results.json";
+
+			d3.select("#defaultPeakLoadTab").dispatch("click");
+
+			d3.json(dataUrl).then((json) => {
+				resultData = json;
+				console.log("resultData", resultData);
+
+				// default
+				let climateZone = getClimateZone();
+				const [strategyID, heatingSystem, glazingMaterial, shadingMaterial, daylightDimming] = getStrategy();
+
+				updateClimateZone(climateZone);
+				addStrategy(climateZone, strategyID, heatingSystem, glazingMaterial, shadingMaterial, daylightDimming);
+
+				// if change climate zone, update climate zone
+				d3.select("#climate-zone-dropdown").on("change", () => {
+					climateZone = getClimateZone();
+					updateClimateZone(climateZone);
+				});
+				// if click add, update strategy
+				d3.select("#strategy-add-button").on("click", () => {
+					const [strategyID, heatingSystem, glazingMaterial, shadingMaterial, daylightDimming] =
+						getStrategy();
+					addStrategy(
+						climateZone,
+						strategyID,
+						heatingSystem,
+						glazingMaterial,
+						shadingMaterial,
+						daylightDimming
+					);
+				});
+			});
+
+			function camelToCapitalizedCase(str) {
+				return str
+					.replace(/([a-z0-9])([A-Z])/g, "$1 $2") // Add a space before capital letters
+					.replace(/^./, function (str) {
+						return str.toUpperCase();
+					}); // Capitalize the first letter
+			}
+
+			function getClimateZone() {
+				climateZone = d3.select("#climate-zone-dropdown select").property("value");
+				return climateZone;
+			}
+
+			function getStrategy() {
+				const heatingSystem = d3.select('input[name="heating-system-radio"]:checked').node().id;
+				const glazingMaterial = d3.select("#glazing-material-dropdown select").property("value");
+				const shadingMaterial = d3.select("#shading-material-dropdown select").property("value");
+				const daylightDimming = d3.select('input[name="daylight-dimming-radio"]:checked').node().id;
+
+				const strategyID = `${heatingSystem}_${glazingMaterial}_${shadingMaterial}_${daylightDimming}`;
+
+				const heatingSystemLabel = getLabel(heatingSystemRadioOptions, heatingSystem);
+				const glazingMaterialLabel = getLabel(glazingMaterialDropdownOptions, glazingMaterial);
+				const shadingMaterialLabel = getLabel(shadingMaterialDropdownOptions, shadingMaterial);
+				const daylightDimmingLabel = getLabel(daylightDimmingRadioOptions, daylightDimming);
+
+				return [
+					strategyID,
+					heatingSystemLabel,
+					glazingMaterialLabel,
+					shadingMaterialLabel,
+					daylightDimmingLabel,
+				];
+			}
+
+			function addStrategy(
+				climateZone,
+				strategyID,
+				heatingSystem,
+				glazingMaterial,
+				shadingMaterial,
+				daylightDimming
+			) {
+				strategyExists = strategyLibrary.some(
+					(data) => data.climateZone === climateZone && data.strategyID === strategyID
+				);
+				if (strategyExists) {
+					alert("Strategy is already added to the library.");
+					return;
+				}
+				strategyData = getStrategyData(climateZone, strategyID);
+				strategyLibrary.push({
+					climateZone: climateZone,
+					strategyID: strategyID,
+					heatingSystem: heatingSystem,
+					glazingMaterial: glazingMaterial,
+					shadingMaterial: shadingMaterial,
+					daylightDimming: daylightDimming,
+					data: strategyData,
+				});
+				updateStrategyLibraryTable();
+				updateStrategyChart();
+			}
+
+			function updateClimateZone(climateZone) {
+				//title
+				document.getElementById("climate-energy-bar-title").textContent =
+					"Energy Consumption for Climate Zone " +
+					d3.select("#climate-zone-dropdown").select("option:checked").text();
+
+				const energyData = Object.keys(resultData[climateZone]).map((strategy) => {
+					return {
+						climateZone: climateZone,
+						strategyID: strategy,
+						heatingEnergy: resultData[climateZone][strategy].heating_energy.total.value.annual,
+						coolingEnergy: resultData[climateZone][strategy].cooling_energy.total.value.annual,
+						lightingEnergy: resultData[climateZone][strategy].lighting_energy.total.value.annual,
+					};
+				});
+
+				//update Plots
+				updateGeneralEnergyenergyTypePlot(energyData);
+
+				console.log("Updated to climate zone", climateZone);
+			}
+
+			function getStrategyData(climateZone, strategyID) {
+				const monthlyTotalHeatingEnergy = resultData[climateZone][strategyID].heating_energy.total.value.months;
+				const monthlyTotalCoolingEnergy = resultData[climateZone][strategyID].cooling_energy.total.value.months;
+				const monthlyTotalLightingEnergy =
+					resultData[climateZone][strategyID].lighting_energy.total.value.months;
+				const monthlyTotalEnergy = months.map((month, index) => {
+					return {
+						month: month,
+						heatingEnergy: monthlyTotalHeatingEnergy[index],
+						coolingEnergy: monthlyTotalCoolingEnergy[index],
+						lightingEnergy: monthlyTotalLightingEnergy[index],
+					};
+				});
+
+				const monthlyPeakHeatingEnergy = resultData[climateZone][strategyID].heating_energy.peak.value.months;
+				const monthlyPeakCoolingEnergy = resultData[climateZone][strategyID].cooling_energy.peak.value.months;
+				const monthlyPeakLoad = months.map((month, index) => {
+					return {
+						month: month,
+						heatingEnergy: monthlyPeakHeatingEnergy[index],
+						coolingEnergy: monthlyPeakCoolingEnergy[index],
+					};
+				});
+
+				const strategyData = {
+					ranking: [
+						{
+							name: "Carbon Emission",
+							value: resultData[climateZone][strategyID].carbon_emission.total.normalized.annual,
+						},
+						{
+							name: "Energy",
+							value: resultData[climateZone][strategyID].building_energy.total.normalized.annual,
+						},
+						{
+							name: "Daylight Autonomy",
+							value: resultData[climateZone][strategyID].sda.total.normalized.annual,
+						},
+						{
+							name: "Glare",
+							value: resultData[climateZone][strategyID].glare.total.normalized.annual,
+						},
+					],
+					monthlyTotalEnergy: monthlyTotalEnergy,
+					monthlyPeakLoad: monthlyPeakLoad,
+				};
+				return strategyData;
+			}
+
+			function updateStrategyLibraryTable() {
+				const strategyLibraryTableBody = d3.select("#strategy-library-table tbody");
+				strategyLibraryTableBody.selectAll("*").remove();
+				strategyLibrary.forEach((data, index) => {
+					const row = strategyLibraryTableBody.append("tr");
+					row.append("td")
+						.append("button")
+						.text("Remove")
+						.attr("class", "button")
+						.style("height", "50%")
+						.style("background-color", mediumColorScale(index))
+						.style("border-color", mediumColorScale(index))
+						.on("click", () => {
+							strategyLibrary.splice(index, 1);
+							updateStrategyLibraryTable();
+							updateStrategyChart();
+						});
+					row.append("td")
+						.attr("class", "color-cell")
+						.append("svg")
+						.attr("width", 20)
+						.attr("height", 20)
+						.append("rect")
+						.attr("width", 20)
+						.attr("height", 20)
+						.attr("fill", mediumColorScale(index));
+					const cz = getLabel(climateZoneDropdownOptions, data.climateZone);
+					row.append("td").text(cz.split(":")[0] + " (" + cz.split("(")[1]);
+					row.append("td").text(data.heatingSystem);
+					row.append("td").text(data.glazingMaterial);
+					row.append("td").text(data.shadingMaterial);
+					row.append("td").text(data.daylightDimming);
+				});
+				console.log("strategyLibrary", strategyLibrary);
+			}
+
+			function updateStrategyChart() {
+				updatePerformanceRadarPlot();
+
+				updateDetailedEnergyenergyTypePlot();
+
+				updateDetailedPeakLoadLinePlot("heating");
+				updateDetailedPeakLoadLinePlot("cooling");
+			}
+
+			function selectPeakLoadTab(event, energyType) {
+				// Hide all elements with class "tabcontent"
+				d3.selectAll(".tabcontent").style("display", "none");
+
+				// Remove the "active" class from all elements with class "tablinks"
+				d3.selectAll(".tablinks").classed("active", false);
+
+				// Show the current tab and add an "active" class to the button that opened the tab
+				d3.select(`#${energyType}`).style("display", "block");
+				d3.select(event.currentTarget).classed("active", true);
+			}
+
+			function updateDetailedEnergyenergyTypePlot(plotData) {
+				// Set dimensions and margins
+				const margin = { left: 90, right: 20, top: 20, bottom: 180 };
+				const width = 850 - margin.left - margin.right;
+				const height = 450 - margin.top - margin.bottom;
+
+				d3.select("#detailed-energy-stacked-bar-plot").selectAll("svg").remove();
+				const svg = d3
+					.select("#detailed-energy-stacked-bar-plot")
+					.append("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
+
+				// Set up the scales
+				const x1 = d3.scaleBand().domain(months).range([0, width]).padding(0.1);
+
+				const x = d3
+					.scaleBand()
+					.domain(strategyLibrary.flatMap((item) => item.climateZone + "-" + item.strategyID))
+					.range([0, x1.bandwidth()])
+					.padding(0.05);
+
+				const y = d3
+					.scaleLinear()
+					.domain([
+						0,
+						d3.max(
+							strategyLibrary.flatMap((item) => item.data.monthlyTotalEnergy),
+							(d) => d.heatingEnergy + d.coolingEnergy + d.lightingEnergy
+						),
+					])
+					.nice()
+					.range([height, 0]);
+
+				const xAxis = d3.axisBottom(x1).tickPadding(10);
+				const yAxis = d3.axisLeft(y).ticks(6).tickPadding(10);
+
+				// Add the x-axis
+				svg.append("g").attr("class", "axis-label").attr("transform", `translate(0,${height})`).call(xAxis);
+
+				// Add the y-axis
+				svg.append("g").attr("class", "axis-label").call(yAxis);
+				// Add y-axis label
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -height / 2)
+					.attr("y", -margin.left + 20)
+					.attr("text-anchor", "middle")
+					.text("Energy (kWh)");
+
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("x", width / 2) // Center the label
+					.attr("y", height + 55) // Adjust the vertical position
+					.attr("text-anchor", "middle")
+					.text("**Hover over each bar to see details")
+					.style("font-size", "12pt")
+					.style("fill", "gray")
+					.style("font-style", "italic");
+
+				barClassName = "detailed-bars";
+				strategyLibrary.forEach((data, index) => {
+					const stackData = stack(data.data.monthlyTotalEnergy);
+					stackData.forEach((energyType) => {
+						energyType.forEach((month) => {
+							month.energyType = energyType.key;
+							month.index = index;
+							month.hoverText = `<strong>Climate Zone:</strong> ${data.climateZone}<br><strong>Heating System:</strong> ${data.heatingSystem}<br><strong>Glazing Material:</strong> ${data.glazingMaterial}<br><strong>Shading Material:</strong> ${data.shadingMaterial}<br><strong>Daylight Dimming:</strong> ${data.daylightDimming}`;
+
+							// stack.id = `${stack.energyType}-${stack.data.month}_${stack.data.climateZone}-${stack.data.strategyID}`;
+						});
+					});
+
+					let bars = svg.selectAll(`.stackData${index}`).data(stackData);
+					const hoverText = bars.join(
+						(enter) => {
+							const barsEnter = enter.append("g").attr("class", `stackData${index}`);
+							barsEnter.append("g").attr("class", barClassName);
+
+							updateRects(barClassName, x, y, height, barsEnter.select("." + barClassName), x1);
+
+							return enter;
+						},
+						(update) => {
+							const barsUpdate = update.select(barClassName);
+							updateRects(barClassName, x, y, height, barsUpdate, x1);
+						},
+						(exit) => {
+							return exit.remove();
+						}
+					);
+				});
+			}
+
+			function updateGeneralEnergyenergyTypePlot(plotData) {
+				stackData = stack(plotData);
+				barClassName = "general-bars";
+
+				// y
+				const margin = { left: 100, right: 20, top: 50, bottom: 50 };
+				const width = 550 - margin.left - margin.right;
+				const height = 550 - margin.top - margin.bottom;
+
+				d3.select("#general-energy-stacked-bar-plot").selectAll("svg").remove();
+				svg = d3
+					.select("#general-energy-stacked-bar-plot")
+					.append("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
+
+				svg.append("g").attr("class", "stacks");
+				const y = d3
+					.scaleLinear()
+					.rangeRound([height, 0])
+					.domain([0, d3.max(stackData[stackData.length - 1], (d) => d[1])]);
+				// const yAxis = d3.axisLeft(y);
+				// svg.append("g").attr("class", "y axis").call(yAxis);
+
+				// x
+				const x = d3
+					.scaleBand()
+					.rangeRound([0, width])
+					.domain(plotData.map((d) => d.strategyID))
+					.padding(0.25);
+
+				const xAxis = d3.axisBottom(x).tickPadding(10);
+				const yAxis = d3.axisLeft(y).ticks(6).tickPadding(10);
+
+				// Add the x-axis
+				svg.append("g").attr("class", "axis-label").attr("transform", `translate(0,${height})`).call(xAxis);
+
+				svg.selectAll(".axis-label .tick text").remove();
+
+				// Add the y-axis
+				svg.append("g").attr("class", "axis-label").call(yAxis);
+				svg.select(".y").transition().duration(1000).call(yAxis);
+				// Add y-axis label
+
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("x", width / 2) // Center the label
+					.attr("y", height + 40) // Adjust the vertical position
+					.attr("text-anchor", "middle")
+					.text("**Hover over each bar to see details")
+					.style("font-size", "12pt")
+					.style("fill", "gray")
+					.style("font-style", "italic");
+
+				// Add y-axis label
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -height / 2)
+					.attr("y", -margin.left + 20)
+					.attr("text-anchor", "middle")
+					.text("Energy (kWh)");
+
+				const colorScale = d3
+					.scaleOrdinal()
+					.domain(["lightingEnergy", "heatingEnergy", "coolingEnergy"])
+					.range(["gray", "#4197b4", "#a5d0df"]);
+
+				// invidiual id for each bar
+				stackData.forEach((energyType) => {
+					energyType.forEach((strategy) => {
+						strategy.energyType = energyType.key;
+						strategy.climateZone = getLabel(climateZoneDropdownOptions, strategy.data.climateZone);
+						strategy.heatingSystem = getLabel(
+							heatingSystemRadioOptions,
+							strategy.data.strategyID.split("_")[0]
+						);
+						strategy.glazingMaterial = getLabel(
+							glazingMaterialDropdownOptions,
+							strategy.data.strategyID.split("_")[1]
+						);
+						strategy.shadingMaterial = getLabel(
+							shadingMaterialDropdownOptions,
+							strategy.data.strategyID.split("_")[2]
+						);
+						strategy.daylightDimming = getLabel(
+							daylightDimmingRadioOptions,
+							strategy.data.strategyID.split("_")[3]
+						);
+						// strategy.id = `${strategy.energyType}-${strategy.data.strategyID}`;
+						strategy.hoverText = `<strong>Heating System:</strong> ${strategy.heatingSystem}<br><strong>Glazing Material:</strong> ${strategy.glazingMaterial}<br><strong>Shading Material:</strong> ${strategy.shadingMaterial}<br><strong>Daylight Dimming:</strong> ${strategy.daylightDimming}`;
+					});
+				});
+
+				let bars = svg
+					.selectAll("g.stacks")
+					.selectAll(".stack")
+					.data(stackData, (d) => {
+						return d.key;
+					});
+
+				bars.join(
+					(enter) => {
+						const barsEnter = enter.append("g").attr("class", "stack");
+						barsEnter
+							.append("g")
+							.attr("class", barClassName)
+							.attr("fill", (d) => {
+								return colorScale(d.key);
+							});
+						// .attr("opacity", 0.6);
+
+						updateRects(barClassName, x, y, height, barsEnter.select("." + barClassName));
+
+						return enter;
+					},
+					(update) => {
+						const barsUpdate = update.select("." + barClassName);
+						updateRects(barClassName, x, y, height, barsUpdate);
+					},
+					(exit) => {
+						return exit.remove();
+					}
+				);
+			}
+
+			function updateRects(barClassName, x, y, height, childRects, x1 = "") {
+				const tooltip = d3.select("#tooltip");
+
+				childRects
+					.selectAll("rect")
+					.data(
+						(d) => d
+						// (d) => d.id
+					)
+					.join(
+						(enter) =>
+							enter
+								.append("rect")
+								// .attr("id", (d) => d.id)
+								.attr("class", barClassName)
+
+								.attr("x", (d) => {
+									if (x1 === "") {
+										return x(d.data.strategyID);
+									} else {
+										return x1(d.data.month) + d.index * x.bandwidth();
+									}
+								})
+								.attr("y", y(0))
+								.attr("width", x.bandwidth())
+								.attr("fill", (d) => {
+									if (x1 === "") {
+										return null;
+									} else {
+										if (d.energyType === "lightingEnergy") {
+											return darkColorScale(d.index);
+										} else if (d.energyType === "heatingEnergy") {
+											return mediumColorScale(d.index);
+										} else if (d.energyType === "coolingEnergy") {
+											return lightColorScale(d.index);
+										}
+									}
+								})
+								.call((enter) =>
+									enter
+										.transition()
+										.duration(1000)
+										.attr("y", (d) => y(d[1]))
+										.attr("height", (d) => y(d[0]) - y(d[1]))
+								)
+								.on("mouseover", function (event, d) {
+									d3.selectAll("." + barClassName).attr("opacity", 0.5); // Darken all bars
+									d3.select(this).attr("opacity", 1).attr("stroke", "black").attr("stroke-width", 5); // Highlight the hovered bar
+									const energyType = camelToCapitalizedCase(d.energyType);
+									const energyValue = Math.round(d[1] - d[0]);
+									tooltip
+										.style("display", "block")
+										.html(`${d.hoverText}<br><strong>${energyType}:</strong> ${energyValue} kWh`)
+										// .html(`Value: ${d[1] - d[0]} kWh`)
+										.style("left", event.pageX + 5 + "px")
+										.style("top", event.pageY - 28 + "px");
+								})
+
+								.on("mousemove", function (event) {
+									tooltip.style("left", event.pageX + 5 + "px").style("top", event.pageY - 28 + "px");
+								})
+								.on("mouseout", function () {
+									d3.selectAll("." + barClassName)
+										.attr("opacity", 1)
+										.attr("stroke", null)
+										.attr("stroke-width", null); // Reset bars to normal opacity
+									tooltip.style("display", "none");
+								}),
+
+						(update) =>
+							update.call((update) =>
+								update
+									.transition()
+									.duration(1000)
+									.attr("y", (d) => y(d[1]))
+									.attr("height", (d) => y(d[0]) - y(d[1]))
+							),
+						(exit) =>
+							exit.call((exit) =>
+								exit.transition().duration(1000).attr("y", height).attr("height", height)
+							)
+					);
+			}
+
+			function updatePerformanceRadarPlot() {
+				const margin = { top: 30, right: 60, bottom: 100, left: 50 };
+				const width = 270 - margin.left - margin.right;
+				const height = 400 - margin.top - margin.bottom;
+				const radius = Math.min(width, height) / 2;
+
+				const levels = 5; // Number of levels
+				const angleSlice = (Math.PI * 2) / 4; // 4 categories;x
+
+				d3.select("#performance-radar-plot").selectAll("svg").remove();
+				// Create the radar chart container
+				svg = d3
+					.select("#performance-radar-plot")
+					.append("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", `translate(${width / 2 + margin.left},${height / 2 + margin.top})`);
+
+				// Create the radar axis
+				const rScale = d3.scaleLinear().range([0, radius]).domain([0, levels]);
+				let rankingData = "";
+				strategyLibrary.forEach((entry, index) => {
+					rankingData = entry.data.ranking;
+					const radarLine = d3
+						.lineRadial()
+						.radius((d) => rScale(d.value / 20))
+						.angle((d, i) => i * angleSlice)
+						.curve(d3.curveLinearClosed);
+
+					// Draw the radar chart areas
+					svg.append("path")
+						.datum(rankingData)
+						.attr("class", "radar-area")
+						.attr("d", radarLine)
+						.style("fill", mediumColorScale(index))
+						.style("fill-opacity", 0.2)
+						.style("stroke", mediumColorScale(index))
+						.style("stroke-width", 2);
+				});
+
+				const legend = svg.append("g").attr("transform", `translate(${-width / 2 - 60}, ${-height / 2 - 140})`);
+
+				const levelsScale = d3.scaleLinear().domain([0, 1]).range([0, radius]);
+
+				// Add concentric rings
+				for (let i = 0; i < levels; i++) {
+					const levelRadius = levelsScale((i + 1) / levels);
+					svg.append("circle")
+						.attr("r", levelRadius)
+						.attr("class", "grid-line")
+						.style("fill", "none")
+						.style("stroke", "#ccc");
+				}
+
+				// Draw the radar axis lines
+				svg.selectAll(".axis")
+					.data(rankingData)
+					.enter()
+					.append("line")
+					.attr("class", "axis")
+					.attr("x1", (d, i) => rScale(levels) * Math.sin(angleSlice * i))
+					.attr("y1", (d, i) => -rScale(levels) * Math.cos(angleSlice * i))
+					.attr("x2", 0)
+					.attr("y2", 0)
+					.style("stroke", "#ccc")
+					.style("stroke-width", "1px");
+
+				// Add axis labels
+				svg.selectAll(".axis-label")
+					.data(rankingData)
+					.enter()
+					.append("text")
+					.attr("class", "axis-label")
+					.attr("x", (d, i) => (rScale(levels) + 30) * Math.sin(angleSlice * i))
+					.attr("y", (d, i) => -(rScale(levels) + 20) * Math.cos(angleSlice * i))
+					.attr("text-anchor", "middle")
+					.text((d) => d.name);
+
+				const tickMarks = d3.range(1, levels + 1);
+				svg.selectAll(".tick")
+					.data(tickMarks)
+					.enter()
+					.append("g")
+					.attr("class", "tick")
+					.selectAll("line")
+					.data((d) =>
+						rankingData.map((_, i) => ({
+							angle: i * angleSlice,
+							radius: rScale(d),
+						}))
+					)
+					.enter()
+					.append("line")
+					.attr("x1", (d) => d.radius * Math.sin(d.angle))
+					.attr("y1", (d) => -d.radius * Math.cos(d.angle))
+					.attr("x2", 0)
+					.attr("y2", 0)
+					.style("stroke", "#666")
+					.style("stroke-width", "1px");
+			}
+
+			function updateDetailedPeakLoadLinePlot(energyType) {
+				const tooltip = d3.select("#tooltip");
+
+				// Set up margins and dimensions
+				const margin = { top: 20, right: 30, bottom: 56, left: 80 },
+					width = 550 - margin.left - margin.right,
+					height = 290 - margin.top - margin.bottom;
+
+				d3.select(`#detailed-peak-${energyType}-load-line-plot`).selectAll("*").remove();
+				// Create the SVG container
+				const svg = d3
+					.select(`#detailed-peak-${energyType}-load-line-plot`)
+					.append("svg")
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", `translate(${margin.left},${margin.top})`);
+
+				// Parse month names as dates
+				const parseMonth = d3.timeParse("%b");
+				const allData = [];
+
+				const parsedMonths = months.map((month) => parseMonth(month));
+				const x = d3
+					.scaleTime()
+					.domain([parsedMonths[0], parsedMonths[parsedMonths.length - 1]]) // Using parsedMonths for the domain
+					.range([0, width]);
+
+				const y = d3
+					.scaleLinear()
+					.domain([
+						0,
+						d3.max(
+							strategyLibrary.flatMap((item) => item.data.monthlyPeakLoad),
+							(d) => d[`${energyType}Energy`]
+						),
+					])
+					// .domain([0, d3.max(allData.flat(), (d) => d.heatingEnergy + d.coolingEnergy)])
+					.nice()
+					.range([height, 0]);
+
+				// Create axes
+				const xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%b")).tickPadding(10);
+				const yAxis = d3.axisLeft(y).ticks(5).tickPadding(10);
+
+				// Append axes to the SVG
+				svg.append("g").attr("class", "axis-label").attr("transform", `translate(0,${height})`).call(xAxis);
+
+				svg.append("g").attr("class", "axis-label").call(yAxis);
+
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("x", width / 2) // Center the label
+					.attr("y", height + 55) // Adjust the vertical position
+					.attr("text-anchor", "middle")
+					.text("**Hover over each line to see details")
+					.style("font-size", "12pt")
+					.style("fill", "gray")
+					.style("font-style", "italic");
+
+				// Create line generators
+				const line = d3
+					.line()
+					.x((d) => x(d.date))
+					.y((d) => {
+						return y(d[`${energyType}Energy`]);
+					});
+
+				strategyLibrary.forEach((entry, index) => {
+					const data = entry.data.monthlyPeakLoad;
+					data.forEach((d) => {
+						d.date = parseMonth(d.month);
+					});
+
+					// Define a shared mouseover function
+					const sharedMouseOver = function (event, d) {
+						// Enlarge the hovered element
+						svg.select(`.line-${index}`).attr("stroke-width", 6);
+						svg.selectAll(`.${energyType}-point-${index}`).attr("r", 8); // Adjust for both line and points
+
+						// Update tooltip
+						tooltip
+							.style("display", "inline")
+							.html(
+								`<strong>Climate Zone:</strong> ${
+									entry.climateZone
+								}<br><strong>Heating System:</strong> ${
+									entry.heatingSystem
+								}<br><strong>Glazing Material:</strong> ${
+									entry.glazingMaterial
+								}<br><strong>Shading Material:</strong> ${
+									entry.shadingMaterial
+								}<br><strong>Daylight Dimming:</strong> ${
+									entry.daylightDimming
+								}<br><strong>Month:</strong>${d.month}<br><strong>${camelToCapitalizedCase(
+									energyType
+								)}:</strong>${d[`${energyType}Energy`].toFixed(2)} kW`
+							) // Use the correct value
+							.style("left", event.pageX + 5 + "px")
+							.style("top", event.pageY - 25 + "px");
+					};
+
+					// Define a shared mouseout function
+					const sharedMouseOut = function () {
+						svg.select(`.line-${index}`).attr("stroke-width", 3);
+						svg.selectAll(`.${energyType}-point-${index}`).attr("r", 5); // Reset size for both
+						tooltip.style("display", "none");
+					};
+
+					// Draw the line
+					svg.append("path")
+						.datum(data)
+						.attr("class", `line-${index}`)
+						.attr("stroke", mediumColorScale(index))
+						.attr("d", line)
+						.attr("fill", "none")
+						.attr("stroke-width", 3)
+						.on("mouseover", sharedMouseOver)
+						.on("mouseout", sharedMouseOut);
+
+					// Draw the points
+					svg.selectAll(`.${energyType}-point-${index}`)
+						.data(data)
+						.enter()
+						.append("circle")
+						.attr("class", `${energyType}-point-${index}`)
+						.attr("cx", (d) => x(d.date))
+						.attr("cy", (d) => y(d[`${energyType}Energy`]))
+						.attr("r", 5) // Default size for points
+						.attr("fill", darkColorScale(index))
+						.on("mouseover", sharedMouseOver)
+						.on("mouseout", sharedMouseOut);
+				});
+
+				svg.append("text")
+					.attr("class", "axis-label")
+					.attr("transform", "rotate(-90)")
+					.attr("y", -margin.left + 20)
+					.attr("x", -height / 2)
+					.attr("text-anchor", "middle")
+					.text("Peak Load (kW)");
+			}
+		</script>
+	</body>
 </html>
