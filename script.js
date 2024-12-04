@@ -210,21 +210,26 @@ genRadio("daylight-dimming-radio", daylightDimmingRadioOptions);
 genRadio("peak-load-display-radio", peakLoadDisplayRadioOptions);
 
 d3.select("#defaultPeakLoadTab").dispatch("click");
+addInfoIcons();
 
 d3.json(dataUrl).then((resultData) => {
 	let climateZone = updateClimateZone(resultData);
 	let selectedStrategyLibrary = genStrategyLibrary(resultData, climateZone);
+	updateSelectedStrategyTable(selectedStrategyLibrary);
+	updateStrategyChart(selectedStrategyLibrary);
 
 	d3.select("#climate-zone-dropdown").on("change", () => {
 		climateZone = updateClimateZone(resultData, climateZone);
 		selectedStrategyLibrary = genStrategyLibrary(resultData, climateZone);
+		updateSelectedStrategyTable(selectedStrategyLibrary);
+		updateStrategyChart(selectedStrategyLibrary);
 	});
 
 	d3.select("#strategy-add-button").on("click", () => {
-		selectedStrategyLibrary = updateSelectedStrategyLibrary(resultData, climateZone, selectedStrategyLibrary);
+		selectedStrategyLibrary = addSelectedStrategyToLibrary(resultData, climateZone, selectedStrategyLibrary);
+		updateSelectedStrategyTable(selectedStrategyLibrary);
+		updateStrategyChart(selectedStrategyLibrary);
 	});
-
-	addInfoIcons();
 });
 
 function addInfoIcons() {
@@ -303,7 +308,7 @@ function genDropdown(name, options) {
 
 function genStrategyLibrary(resultData, climateZone) {
 	setDefaultStrategy();
-	const selectedStrategyLibrary = updateSelectedStrategyLibrary(resultData, climateZone, []);
+	const selectedStrategyLibrary = addSelectedStrategyToLibrary(resultData, climateZone, []);
 	return selectedStrategyLibrary;
 }
 
@@ -413,14 +418,6 @@ function addSelectedStrategyToLibrary(resultData, climateZone, selectedStrategyL
 	}
 }
 
-function updateSelectedStrategyLibrary(resultData, climateZone, selectedStrategyLibrary) {
-	const newSelectedStrategyLibrary = addSelectedStrategyToLibrary(resultData, climateZone, selectedStrategyLibrary);
-	updateSelectedStrategyTable(selectedStrategyLibrary);
-	updateStrategyChart(selectedStrategyLibrary);
-
-	return newSelectedStrategyLibrary;
-}
-
 function updateSelectedStrategyTable(selectedStrategyLibrary) {
 	const tbody = d3.select("#strategy-library-table tbody");
 	tbody.selectAll("*").remove();
@@ -444,7 +441,7 @@ function updateSelectedStrategyTable(selectedStrategyLibrary) {
 				.on("click", () => {
 					selectedStrategyLibrary.splice(index, 1);
 					updateSelectedStrategyTable(selectedStrategyLibrary);
-					updateStrategyChart();
+					updateStrategyChart(selectedStrategyLibrary);
 				});
 			row.append("td")
 				.append("button")
