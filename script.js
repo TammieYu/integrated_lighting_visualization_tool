@@ -146,8 +146,8 @@ const shadingControlDropdownOptions = [
 	{ id: "dynamicctrl1", label: "Dynamic Controller #1" },
 ];
 const peakLoadDisplayRadioOptions = [
-	{ id: "Absolute", label: "Absolute" },
-	{ id: "Relative", label: "Relative (to baseline)" },
+	{ id: "absolute", label: "Absolute" },
+	{ id: "relative", label: "Relative (to baseline)" },
 ];
 const glazingMaterials = glazingMaterialDropdownOptions.map((element) => element.id);
 const heatingSystems = heatingSystemRadioOptions.map((element) => element.id);
@@ -224,61 +224,47 @@ d3.json(dataUrl).then((resultData) => {
 		selectedStrategyLibrary = updateSelectedStrategyLibrary(resultData, climateZone, selectedStrategyLibrary);
 	});
 
-	addMoreInfoIcons();
+	addInfoIcons();
 });
 
-function addMoreInfoIcons() {
+function addInfoIcons() {
 	createShadingControlInfoIcon("#shading-control-info1");
 	createShadingControlInfoIcon("#shading-control-info2");
+	createPeakLoadInfoIcon("#peak-load-info");
 }
 
 function createShadingControlInfoIcon(id) {
-	const container = d3.select(id);
-	const headingBox = container.node().getBoundingClientRect();
-	const svg = container
+	const alway60 = `<strong>Always two-third shaded</strong><br>The shade is always two-thirds of the way down.`;
+	const ctrl1 = `<strong>Dynamic Controller #1</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down. The shade controller inputs include sky cloud coverage, thermal load, indoor brightness, and daylight penetration depth. It is optimized to reduce energy consumption and visual comfort.`;
+	const content = alway60 + "<br><br>" + ctrl1;
+
+	const svg = d3
+		.select(id)
 		.append("svg")
 		.attr("width", 20)
-		.attr("height", headingBox.height)
+		.attr("height", 20)
 		.style("display", "inline-block")
 		.style("vertical-align", "middle")
 		.style("margin-left", "5px");
 
-	const alway60 = `<strong>Always two-third shaded</strong><br>The shade is always two-thirds of the way down.`;
-	const ctrl1 = `<strong>Dynamic Controller #1</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down. The shade controller inputs include sky cloud coverage, thermal load, indoor brightness, and daylight penetration depth. It is optimized to reduce energy consumption and visual comfort.`;
-	const hoverText = alway60 + "<br><br>" + ctrl1;
-	createInfoIcon(svg, 10, headingBox.height / 2)
-		.on("mouseover", (event) => {
-			tooltip.style("display", "block").html(hoverText);
-			updateTooltipPosition(event);
-		})
-		.on("mousemove", (event) => {
-			updateTooltipPosition(event);
-		})
-		.on("mouseout", () => {
-			tooltip.style("display", "none");
-		});
+	createInfoIcon(svg, 10, 10, content);
+}
 
-	function updateTooltipPosition(event) {
-		const tooltipWidth = tooltip.node().offsetWidth; // Get tooltip width
-		const tooltipHeight = tooltip.node().offsetHeight; // Get tooltip height
-		let left = event.pageX + 5;
-		let top = event.pageY - 28;
+function createPeakLoadInfoIcon(id) {
+	const absolute = `<strong>Absolute</strong><br>Monthly cooling or heating load peak`;
+	const relative = `<strong>Relative</strong><br>Asychronous peak difference when compared to baseline. A negative value means the selected strategy has a lower peak load than the baseline and suggests potential energy savings.`;
+	const content = absolute + "<br><br>" + relative;
 
-		// Check if tooltip goes beyond right edge of viewport
-		if (left + tooltipWidth > window.innerWidth) {
-			left = window.innerWidth - tooltipWidth - 100; // Adjust left position
-		}
+	const svg = d3
+		.select(id)
+		.append("svg")
+		.attr("width", 20)
+		.attr("height", 20)
+		.style("display", "inline-block")
+		.style("vertical-align", "middle")
+		.style("margin-left", "5px");
 
-		// Check if tooltip goes beyond bottom edge of viewport
-		if (top < 0) {
-			top = 5; // Adjust top position to be within the viewport
-		} else if (top + tooltipHeight > window.innerHeight) {
-			top = window.innerHeight - tooltipHeight - 100; // Adjust top position for bottom overflow
-		}
-
-		// Update tooltip position
-		tooltip.style("left", `${left}px`).style("top", `${top}px`);
-	}
+	createInfoIcon(svg, 10, 10, content);
 }
 
 function genRadio(name, options) {
@@ -602,7 +588,7 @@ function addLegend(svg, plotLayout, colorScale) {
 		});
 }
 
-function createInfoIcon(parent, x, y) {
+function createInfoIcon(parent, x, y, content) {
 	const iconGroup = parent.append("g").attr("class", "info-icon-group").attr("transform", `translate(${x}, ${y})`);
 
 	iconGroup
@@ -620,9 +606,39 @@ function createInfoIcon(parent, x, y) {
 		.text("?")
 		.attr("fill", "white") // Use attr for fill
 		.style("font-size", "10px")
-		.style("font-weight", "normal");
+		.style("font-weight", "normal")
+		.on("mouseover", (event) => {
+			tooltip.style("display", "block").html(content);
+			updateTooltipPosition(event);
+		})
+		.on("mousemove", (event) => {
+			updateTooltipPosition(event);
+		})
+		.on("mouseout", () => {
+			tooltip.style("display", "none");
+		});
 
-	return iconGroup;
+	function updateTooltipPosition(event) {
+		const tooltipWidth = tooltip.node().offsetWidth; // Get tooltip width
+		const tooltipHeight = tooltip.node().offsetHeight; // Get tooltip height
+		let left = event.pageX + 5;
+		let top = event.pageY - 28;
+
+		// Check if tooltip goes beyond right edge of viewport
+		if (left + tooltipWidth > window.innerWidth) {
+			left = window.innerWidth - tooltipWidth - 100; // Adjust left position
+		}
+
+		// // Check if tooltip goes beyond bottom edge of viewport
+		// if (top < 0) {
+		// 	top = 5; // Adjust top position to be within the viewport
+		// } else if (top + tooltipHeight > window.innerHeight) {
+		// 	top = window.innerHeight - tooltipHeight - 10; // Adjust top position for bottom overflow
+		// }
+
+		// Update tooltip position
+		tooltip.style("left", `${left}px`).style("top", `${top}px`);
+	}
 }
 
 function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRects, energyType) {
@@ -1114,25 +1130,10 @@ function updatePerformanceRadarPlot(strategyDataLibrary) {
 	// 	iconGroup
 	legendItems.each(function (d) {
 		const textWidth = d3.select(this).select("text").node().getComputedTextLength();
-		const infoIcon = createInfoIcon(d3.select(this), textWidth + 10, -6);
-		infoIcon
-			.on("mouseover", function (event) {
-				tooltip
-					.style("display", "block")
-					.html(
-						`${d.letter}: ${d.name} <br> <br> ${
-							performanceMetricDescriptions.find((descriptions) => descriptions.id === d.letter).label
-						}`
-					)
-					.style("left", event.pageX + 5 + "px")
-					.style("top", event.pageY - 28 + "px");
-			})
-			.on("mousemove", function (event) {
-				tooltip.style("left", event.pageX + 5 + "px").style("top", event.pageY - 28 + "px");
-			})
-			.on("mouseout", function () {
-				tooltip.style("display", "none");
-			});
+		const content = `${d.letter}: ${d.name} <br> <br> ${
+			performanceMetricDescriptions.find((descriptions) => descriptions.id === d.letter).label
+		}`;
+		createInfoIcon(d3.select(this), textWidth + 10, -6, content);
 	});
 }
 
@@ -1144,19 +1145,36 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 
 	const parseMonth = d3.timeParse("%B");
 
-	const data = strategyDataLibrary.flatMap((d) => {
+	let data = strategyDataLibrary.flatMap((d) => {
 		return {
 			id: d.id,
 			values: d.data.values.months.map((month) => ({
 				...d,
 				month: parseMonth(month.month),
-				lightingEnergy: month.lighting_load_kw,
 				heatingEnergy: month.heating_load_kw,
 				coolingEnergy: month.cooling_load_kw,
 			})),
 		};
 	});
+	if (displayFormat === "relative") {
+		const baseline = strategyDataLibrary[0];
+		data = strategyDataLibrary.flatMap((d) => {
+			return {
+				id: d.id,
+				values: d.data.values.months.map((month) => {
+					const baselineMonth = baseline.data.values.months.find((m) => m.month === month.month);
+					return {
+						...d,
+						month: parseMonth(month.month),
+						heatingEnergy: month.heating_load_kw - baselineMonth.heating_load_kw,
+						coolingEnergy: month.cooling_load_kw - baselineMonth.cooling_load_kw,
+					};
+				}),
+			};
+		});
+	}
 
+	console.log("here", data);
 	const xscale = d3
 		.scaleTime()
 		.domain(d3.extent(data.flatMap((d) => d.values.map((d) => d.month))))
@@ -1164,7 +1182,7 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 
 	const yscale = d3
 		.scaleLinear()
-		.domain([0, d3.max(data.flatMap((d) => d.values.map((d) => d[`${energyType}Energy`])))])
+		.domain(d3.extent(data.flatMap((d) => d.values.map((d) => d[`${energyType}Energy`]))))
 		.nice()
 		.range([plotLayout.plotHeight, 0]);
 
