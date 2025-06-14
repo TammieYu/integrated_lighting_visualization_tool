@@ -424,8 +424,16 @@ function updateSelectedStrategyTable(selectedStrategyLibrary) {
 	selectedStrategyLibrary.forEach((d, index) => {
 		const row = tbody.append("tr");
 		const strategyColor = new Color("color", index).default;
+		row.append("td")
+			.append("button")
+			.text("X")
+			.attr("class", "remove-button")
+			.on("click", () => {
+				selectedStrategyLibrary.splice(index, 1);
+				updateSelectedStrategyTable(selectedStrategyLibrary);
+				updateStrategyChart(selectedStrategyLibrary);
+			});
 		if (index === 0) {
-			row.append("td");
 			row.append("td")
 				.append("button")
 				.text(`#${d.index} (baseline)`)
@@ -434,15 +442,6 @@ function updateSelectedStrategyTable(selectedStrategyLibrary) {
 				.style("background-color", strategyColor)
 				.style("border-color", strategyColor);
 		} else {
-			row.append("td")
-				.append("button")
-				.text("X")
-				.attr("class", "remove-button")
-				.on("click", () => {
-					selectedStrategyLibrary.splice(index, 1);
-					updateSelectedStrategyTable(selectedStrategyLibrary);
-					updateStrategyChart(selectedStrategyLibrary);
-				});
 			row.append("td")
 				.append("button")
 				.text(`#${d.index}`)
@@ -1170,8 +1169,6 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 			};
 		});
 	}
-
-	console.log("here", data);
 	const xscale = d3
 		.scaleTime()
 		.domain(d3.extent(data.flatMap((d) => d.values.map((d) => d.month))))
