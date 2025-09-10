@@ -113,22 +113,22 @@ const daylightDimmingRadioOptions = [
 	{ id: "dimming", label: "On" },
 ];
 const climateZoneDropdownOptions = [
-	{ id: "1A_USA_FL_MIAMI", label: "1A: Very Hot Humid (Miami, Florida)" },
-	{ id: "2A_USA_TX_HOUSTON", label: "2A: Hot Humid (Houston, Texas)" },
-	{ id: "2B_USA_AZ_PHOENIX", label: "2B: Hot Dry (Phoenix, Arizona)" },
-	{ id: "3A_USA_GA_ATLANTA", label: "3A: Warm Humid (Atlanta, Georgia)" },
-	{ id: "3B_USA_CA_LOS_ANGELES", label: "3B: Warm Dry (Los Angeles, California)" },
-	{ id: "3B_USA_NV_LAS_VEGAS", label: "3B: Warm Dry (Las Vegas, Nevada)" },
-	{ id: "3C_USA_CA_SAN_FRANCISCO", label: "3C: Warm Marine (San Francisco, California)" },
-	{ id: "4A_USA_MD_BALTIMORE", label: "4A: Mixed Humid (Baltimore, Maryland)" },
-	{ id: "4B_USA_NM_ALBUQUERQUE", label: "4B: Mixed Dry (Albuquerque, New Mexico)" },
-	{ id: "4C_USA_WA_SEATTLE", label: "4C: Mixed Marine (Seattle, Washington)" },
-	{ id: "5A_USA_IL_CHICAGO-OHARE", label: "5A: Cool Humid (Chicago, Illinois)" },
-	{ id: "5B_USA_CO_BOULDER", label: "5B: Cool Dry (Boulder, Colorado)" },
-	{ id: "6A_USA_MN_MINNEAPOLIS", label: "6A: Cool Humid (Minneapolis, Minnesota)" },
-	{ id: "6B_USA_MT_HELENA", label: "6B: Cool Dry (Helena, Montana)" },
-	{ id: "7A_USA_MN_DULUTH", label: "7: Very Cool (Duluth, Minnesota)" },
-	{ id: "8A_USA_AK_FAIRBANKS", label: "8: Subartic/Arctic (Fairbanks, Alaska)" },
+	{ id: "1a_fl_miami", label: "1A: Very Hot Humid (Miami, Florida)" },
+	{ id: "2a_tx_houston", label: "2A: Hot Humid (Houston, Texas)" },
+	{ id: "2b_az_phoenix", label: "2B: Hot Dry (Phoenix, Arizona)" },
+	{ id: "3a_ga_atlanta", label: "3A: Warm Humid (Atlanta, Georgia)" },
+	{ id: "3b_ca_los_angeles", label: "3B: Warm Dry (Los Angeles, California)" },
+	{ id: "3b_nv_las_vegas", label: "3B: Warm Dry (Las Vegas, Nevada)" },
+	{ id: "3c_ca_san_francisco", label: "3C: Warm Marine (San Francisco, California)" },
+	{ id: "4a_md_baltimore", label: "4A: Mixed Humid (Baltimore, Maryland)" },
+	{ id: "4b_nm_albuquerque", label: "4B: Mixed Dry (Albuquerque, New Mexico)" },
+	{ id: "4c_wa_seattle", label: "4C: Mixed Marine (Seattle, Washington)" },
+	{ id: "5a_il_chicago-ohare", label: "5A: Cool Humid (Chicago, Illinois)" },
+	{ id: "5b_co_boulder", label: "5B: Cool Dry (Boulder, Colorado)" },
+	{ id: "6a_mn_minneapolis", label: "6A: Cool Humid (Minneapolis, Minnesota)" },
+	{ id: "6b_mt_helena", label: "6B: Cool Dry (Helena, Montana)" },
+	{ id: "7a_mn_duluth", label: "7: Very Cool (Duluth, Minnesota)" },
+	{ id: "8a_ak_fairbanks", label: "8: Subartic/Arctic (Fairbanks, Alaska)" },
 ];
 const glazingMaterialDropdownOptions = [
 	{ id: "sglclr", label: "Single Pane - Clear" },
@@ -142,8 +142,10 @@ const shadingMaterialDropdownOptions = [
 ];
 const shadingControlDropdownOptions = [
 	{ id: "noshadectrl", label: "None" },
-	{ id: "always60percentshaded", label: "Always 2/3 Shaded" },
-	{ id: "dynamicctrl1", label: "Dynamic Controller #1" },
+	{ id: "always60percentshaded", label: "Manual: Always 2/3 Shaded" },
+	{ id: "vdwmanual", label: "Manual: Dynamic" },
+	{ id: "daylightctrl", label: "Dayligt and glare controller" },
+	{ id: "hvacctrl", label: "Heuristic controller to reduce HVAC loads" },
 ];
 const peakLoadDisplayRadioOptions = [
 	{ id: "absolute", label: "Absolute" },
@@ -160,7 +162,7 @@ heatingSystems.forEach((heatingSystem) => {
 			const strategyID = `${heatingSystem}_${glazingMaterial}_noshades_noshadectrl_${daylightDimming}`;
 			strategyIDToIndex.push({ id: strategyID, index: strategyIDToIndex.length + 1 });
 			["extshdt3dark", "intshdt3dark"].forEach((shadingMaterial) => {
-				["always60percentshaded", "dynamicctrl1"].forEach((shadingControl) => {
+				["always60percentshaded", "vdwmanual", "daylightctrl", "hvacctrl"].forEach((shadingControl) => {
 					const strategyID = `${heatingSystem}_${glazingMaterial}_${shadingMaterial}_${shadingControl}_${daylightDimming}`;
 					strategyIDToIndex.push({ id: strategyID, index: strategyIDToIndex.length + 1 });
 				});
@@ -185,16 +187,16 @@ const performanceMetricDescriptions = [
 		id: "D",
 		label: "5 = greater HVAC downsizing. <br> <br> This category evaluates the potential to reduce the size of the cooling systems without compromising comfort. A higher rating indicates potential for downsizing, resulting in energy savings and lower equipment costs.",
 	},
+	// {
+	// 	id: "E",
+	// 	label: "5 = more carbon emission reduction. <br> <br> This category evaluates the building's ability to reduce its greenhouse gas emissions. A higher rating indicates alignment with net-zero emissions and climate change mitigation goals.",
+	// },
+	// {
+	// 	id: "E",
+	// 	label: "5 = more comfortable. <br> <br> This category evaluates the occupants' visual comfort. A higher rating indicates occupants are less likely to experience glare, resulting in overall well-being.",
+	// },
 	{
 		id: "E",
-		label: "5 = more carbon emission reduction. <br> <br> This category evaluates the building's ability to reduce its greenhouse gas emissions. A higher rating indicates alignment with net-zero emissions and climate change mitigation goals.",
-	},
-	{
-		id: "F",
-		label: "5 = more comfortable. <br> <br> This category evaluates the occupants' visual comfort. A higher rating indicates occupants are less likely to experience glare, resulting in overall well-being.",
-	},
-	{
-		id: "G",
 		label: "5 = more natural daylight is available. <br> <br> This category evaluates how much of the building's illumination is achieved from natural daylight. A higher rating indicates greater availability of natural daylight, resulting in reduced energy consumption.",
 	},
 ];
@@ -308,6 +310,7 @@ function genDropdown(name, options) {
 
 function genStrategyLibrary(resultData, climateZone) {
 	setDefaultStrategy();
+	console.log(resultData, climateZone, []);
 	const selectedStrategyLibrary = addSelectedStrategyToLibrary(resultData, climateZone, []);
 	return selectedStrategyLibrary;
 }
@@ -1031,7 +1034,7 @@ function updatePerformanceRadarPlot(strategyDataLibrary) {
 
 	const radius = Math.min(plotLayout.plotWidth, plotLayout.plotHeight) / 2;
 
-	const categories = 7;
+	const categories = performanceMetricDescriptions.length;
 	const levels = 5;
 	const angleSlice = (Math.PI * 2) / categories;
 	// Create the radar axis
@@ -1068,6 +1071,8 @@ function updatePerformanceRadarPlot(strategyDataLibrary) {
 			.radius((d) => rScale(d.value / 20))
 			.angle((d, i) => i * angleSlice)
 			.curve(d3.curveLinearClosed);
+
+		console.log(strategy);
 
 		// Draw the radar chart areas
 		svg.append("path")
@@ -1154,6 +1159,7 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 	});
 	if (displayFormat === "relative") {
 		const baseline = strategyDataLibrary[0];
+		console.log(baseline);
 		data = strategyDataLibrary.flatMap((d) => {
 			return {
 				id: d.id,
