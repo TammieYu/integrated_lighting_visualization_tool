@@ -829,7 +829,7 @@ function getStrategyNameText(data) {
 
 function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 	containerId = "#selected-strategy-energy-stacked-bar-plot";
-	const margin = new Margin(90, 20, 50, 70);
+	const margin = new Margin(120, 20, 50, 70);
 	const plotLayout = new PlotLayout(850, 300, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
 
@@ -934,7 +934,7 @@ function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
 	const containerId = "#all-strategy-energy-stacked-bar-plot";
 	const margin = new Margin(60, 20, 100, 100);
-	const plotLayout = new PlotLayout(580, 1000, margin);
+	const plotLayout = new PlotLayout(580, 2000, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
 
 	const data = allStrategyLibrary.map((d) => {
