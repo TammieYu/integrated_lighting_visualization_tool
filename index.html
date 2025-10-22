@@ -54,7 +54,7 @@
 			.left-grid-container {
 				display: grid;
 				grid-template-columns: 1fr;
-				grid-auto-rows: 60px 350px 1050px;
+				grid-auto-rows: 60px 350px 640px 400px;
 				gap: 20px;
 			}
 			.right-grid-container {
@@ -234,7 +234,14 @@
 				</div>
 				<div class="container" style="grid-column: 1; grid-row: 3">
 					<h3 class="title">Annual Energy</h3>
-					<div class="bar-chart" id="all-strategy-energy-stacked-bar-plot"></div>
+					<div class="bar-chart" id="all-strategy-energy-bar-plot"></div>
+				</div>
+				<div class="container" style="grid-column: 1; grid-row: 4">
+					<h3 class="title">Annual Energy</h3>
+					<p style="color: gray; font-size: 12pt; font-style: italic; margin: 2px">
+						**Legend: see strategy library above
+					</p>
+					<div id="selected-strategy-annual-energy-bar-plot"></div>
 				</div>
 			</div>
 			<div class="right-grid-container">
@@ -327,7 +334,7 @@
 					<p style="color: gray; font-size: 12pt; font-style: italic; margin: 2px">
 						**Legend: see strategy library above
 					</p>
-					<div id="selected-strategy-energy-stacked-bar-plot"></div>
+					<div id="selected-strategy-monthly-energy-bar-plot"></div>
 				</div>
 			</div>
 		</div>

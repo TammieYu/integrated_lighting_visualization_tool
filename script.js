@@ -144,8 +144,8 @@ const shadingControlDropdownOptions = [
 	{ id: "noshadectrl", label: "None" },
 	{ id: "always60percentshaded", label: "Manual: Always 2/3 Shaded" },
 	{ id: "vdwmanual", label: "Manual: Dynamic" },
-	{ id: "daylightctrl", label: "Dayligt and glare controller" },
-	{ id: "hvacctrl", label: "Heuristic controller to reduce HVAC loads" },
+	{ id: "daylightctrl", label: "Auto: Daylight and glare control" },
+	{ id: "irradiance", label: "Auto: Incident Radiation Control" },
 ];
 const peakLoadDisplayRadioOptions = [
 	{ id: "absolute", label: "Absolute" },
@@ -162,7 +162,7 @@ heatingSystems.forEach((heatingSystem) => {
 			const strategyID = `${heatingSystem}_${glazingMaterial}_noshades_noshadectrl_${daylightDimming}`;
 			strategyIDToIndex.push({ id: strategyID, index: strategyIDToIndex.length + 1 });
 			["extshdt3dark", "intshdt3dark"].forEach((shadingMaterial) => {
-				["always60percentshaded", "vdwmanual", "daylightctrl", "hvacctrl"].forEach((shadingControl) => {
+				["always60percentshaded", "vdwmanual", "daylightctrl", "irradiance"].forEach((shadingControl) => {
 					const strategyID = `${heatingSystem}_${glazingMaterial}_${shadingMaterial}_${shadingControl}_${daylightDimming}`;
 					strategyIDToIndex.push({ id: strategyID, index: strategyIDToIndex.length + 1 });
 				});
@@ -241,9 +241,12 @@ function addInfoIcons() {
 }
 
 function createShadingControlInfoIcon(id) {
-	const alway60 = `<strong>Always two-third shaded</strong><br>The shade is always two-thirds of the way down.`;
-	const ctrl1 = `<strong>Dynamic Controller #1</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down. The shade controller inputs include sky cloud coverage, thermal load, indoor brightness, and daylight penetration depth. It is optimized to reduce energy consumption and visual comfort.`;
-	const content = alway60 + "<br><br>" + ctrl1;
+	const always60percentshaded = `<strong>Manual: Always 2/3 Shaded</strong><br>The shade is always two-thirds of the way down.`;
+	const vdwmanual = `<strong>Manual: Dynamic</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down based on incident vertical illuminance. Hysteresis effect is applied to account for delay.`;
+	const daylightctrl = `<strong>Auto: Daylight and Glare Control</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down. The shade controller inputs include sky cloud coverage, thermal load, indoor brightness, and daylight penetration depth. It is optimized to reduce energy consumption and visual comfort.`;
+	const irradiance = `<strong>Auto: Incident Radiation Control</strong><br>The shade can be adjusted to fully open or closed based on the incident solar radiation threshold of 200 W/m2.`;
+	const content =
+		always60percentshaded + "<br><br>" + vdwmanual + "<br><br>" + daylightctrl + "<br><br>" + irradiance;
 
 	const svg = d3
 		.select(id)
@@ -476,7 +479,8 @@ function updateAllStrategyTable(allStrategyLibrary) {
 }
 
 function updateStrategyChart(strategyDataLibrary) {
-	updateSelectedStrategyEnergyBarPlot(strategyDataLibrary);
+	updateSelectedStrategyMonthlyEnergyBarPlot(strategyDataLibrary);
+	updateSelectedStrategyAnnualEnergyBarPlot(strategyDataLibrary);
 	let displayFormat = d3.select('input[name="peak-load-display-radio"]:checked').node().id;
 	updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, "heating", displayFormat);
 	updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, "cooling", displayFormat);
@@ -628,13 +632,6 @@ function createInfoIcon(parent, x, y, content) {
 			left = window.innerWidth - tooltipWidth - 100; // Adjust left position
 		}
 
-		// // Check if tooltip goes beyond bottom edge of viewport
-		// if (top < 0) {
-		// 	top = 5; // Adjust top position to be within the viewport
-		// } else if (top + tooltipHeight > window.innerHeight) {
-		// 	top = window.innerHeight - tooltipHeight - 10; // Adjust top position for bottom overflow
-		// }
-
 		// Update tooltip position
 		tooltip.style("left", `${left}px`).style("top", `${top}px`);
 	}
@@ -666,12 +663,19 @@ function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRect
 					)
 					.on("mouseover", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
-						highlightColorScale.domain().forEach((energyType) => {
-							d3.selectAll(`.${parent}-${energyType}${d.data.index}`).attr(
-								"fill",
-								highlightColorScale(energyType)
-							);
-						});
+						d3.selectAll(`.${parent}-lightingEnergy${d.data.index}`).attr(
+							"fill",
+							highlightColorScale("lightingEnergy")
+						);
+						d3.selectAll(`.${parent}-heatingEnergy${d.data.index}`).attr(
+							"fill",
+							highlightColorScale("heatingEnergy")
+						);
+						d3.selectAll(`.${parent}-coolingEnergy${d.data.index}`).attr(
+							"fill",
+							highlightColorScale("coolingEnergy")
+						);
+
 						const name = getStrategyNameText(d.data);
 						const lightingEnergy = `<strong>Lighting Energy:</strong> ${Math.round(
 							d.data.lightingEnergy
@@ -704,10 +708,9 @@ function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRect
 					})
 					.on("mouseout", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
-						highlightColorScale.domain().forEach((energyType) => {
-							d3.selectAll(`.${parent}-${energyType}${d.data.index}`).attr("fill", null);
-						});
-						// d3.selectAll(`.${parent} rect`).attr("opacity", 1);
+						d3.selectAll(`.${parent}-lightingEnergy${d.data.index}`).attr("fill", null);
+						d3.selectAll(`.${parent}-heatingEnergy${d.data.index}`).attr("fill", null);
+						d3.selectAll(`.${parent}-coolingEnergy${d.data.index}`).attr("fill", null);
 						tooltip.style("display", "none");
 					}),
 			(update) =>
@@ -720,7 +723,16 @@ function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRect
 		);
 }
 
-function updateRectsSelectedStrategy(className, xscale, yscale, plotLayout, childRects, xscale1, index, energyType) {
+function updateRectsSelectedStrategyMonthly(
+	className,
+	xscale,
+	yscale,
+	plotLayout,
+	childRects,
+	xscale1,
+	index,
+	energyType
+) {
 	childRects
 		.selectAll("rect")
 		.data((d) => d)
@@ -737,9 +749,9 @@ function updateRectsSelectedStrategy(className, xscale, yscale, plotLayout, chil
 						if (energyType === "lightingEnergy") {
 							return color.dark;
 						} else if (energyType === "heatingEnergy") {
-							return color.default;
+							return `url(#monthly-heating-hatch-${index})`;
 						} else if (energyType === "coolingEnergy") {
-							return color.light;
+							return `url(#monthly-cooling-hatch-${index})`;
 						}
 					})
 
@@ -753,9 +765,9 @@ function updateRectsSelectedStrategy(className, xscale, yscale, plotLayout, chil
 					.on("mouseover", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
 						color = new Color("gray", 0);
-						d3.selectAll(`.${parent}-lightingEnergy-${d.data.month}`).attr("fill", (d) => color.dark);
-						d3.selectAll(`.${parent}-heatingEnergy-${d.data.month}`).attr("fill", (d) => color.default);
-						d3.selectAll(`.${parent}-coolingEnergy-${d.data.month}`).attr("fill", (d) => color.light);
+						d3.selectAll(`.${parent}-lightingEnergy-${d.data.month}`).attr("fill", color.dark);
+						d3.selectAll(`.${parent}-heatingEnergy-${d.data.month}`).attr("fill", color.default);
+						d3.selectAll(`.${parent}-coolingEnergy-${d.data.month}`).attr("fill", color.light);
 
 						const name = getStrategyNameText(d.data);
 						const lightingEnergy = `<strong>Lighting Energy:</strong> ${Math.round(
@@ -791,8 +803,100 @@ function updateRectsSelectedStrategy(className, xscale, yscale, plotLayout, chil
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
 						color = new Color("color", index);
 						d3.selectAll(`.${parent}-lightingEnergy-${d.data.month}`).attr("fill", (d) => color.dark);
-						d3.selectAll(`.${parent}-heatingEnergy-${d.data.month}`).attr("fill", (d) => color.default);
-						d3.selectAll(`.${parent}-coolingEnergy-${d.data.month}`).attr("fill", (d) => color.light);
+						d3.selectAll(`.${parent}-heatingEnergy-${d.data.month}`).attr(
+							"fill",
+							`url(#monthly-heating-hatch-${index})`
+						);
+						d3.selectAll(`.${parent}-coolingEnergy-${d.data.month}`).attr(
+							"fill",
+							`url(#monthly-cooling-hatch-${index})`
+						);
+						tooltip.style("display", "none");
+					}),
+
+			(update) =>
+				update
+					.transition()
+					.duration(1000)
+					.attr("y", (d) => yscale(d[1]))
+					.attr("height", (d) => yscale(d[0]) - yscale(d[1])),
+			(exit) => exit.remove()
+		);
+}
+
+function updateRectsSelectedStrategyAnnual(className, xscale, yscale, plotLayout, childRects, index, energyType) {
+	childRects
+		.selectAll("rect")
+		.data((d) => d)
+		.join(
+			(enter) =>
+				enter
+					.append("rect")
+					.attr("class", (d) => `${className}`)
+					.attr("x", (d) => xscale(d.data.index))
+					.attr("y", yscale(0))
+					.attr("width", xscale.bandwidth())
+					.attr("fill", (d) => {
+						color = new Color("color", index);
+						if (energyType === "lightingEnergy") {
+							return color.dark;
+						} else if (energyType === "heatingEnergy") {
+							return `url(#heating-hatch-${index})`;
+						} else if (energyType === "coolingEnergy") {
+							return `url(#cooling-hatch-${index})`;
+						}
+					})
+
+					.call((enter) =>
+						enter
+							.transition()
+							.duration(1000)
+							.attr("y", (d) => yscale(d[1]))
+							.attr("height", (d) => yscale(d[0]) - yscale(d[1]))
+					)
+					.on("mouseover", function (event, d) {
+						const parent = d3.select(this.parentNode.parentNode).attr("class");
+						color = new Color("gray", 0);
+						d3.selectAll(`.${parent}-lightingEnergy`).attr("fill", (d) => color.dark);
+						d3.selectAll(`.${parent}-heatingEnergy`).attr("fill", (d) => color.default);
+						d3.selectAll(`.${parent}-coolingEnergy`).attr("fill", (d) => color.light);
+
+						const name = getStrategyNameText(d.data);
+						const lightingEnergy = `<strong>Lighting Energy:</strong> ${Math.round(
+							d.data.lightingEnergy
+						)} kwh`;
+						const heatingEnergy = `<strong>Heating Energy:</strong> ${Math.round(
+							d.data.heatingEnergy
+						)} kwh`;
+						const coolingEnergy = `<strong>Cooling Energy:</strong> ${Math.round(
+							d.data.coolingEnergy
+						)} kwh`;
+						const total = `<strong>Total:</strong> ${Math.round(
+							d.data.lightingEnergy + d.data.heatingEnergy + d.data.coolingEnergy
+						)} kwh`;
+
+						tooltip
+							.style("display", "block")
+							.html(
+								name +
+									"<br> <br>" +
+									lightingEnergy +
+									"<br>" +
+									heatingEnergy +
+									"<br>" +
+									coolingEnergy +
+									"<br>" +
+									total
+							)
+							.style("left", event.pageX + 5 + "px")
+							.style("top", event.pageY - 28 + "px");
+					})
+					.on("mouseout", function (event, d) {
+						const parent = d3.select(this.parentNode.parentNode).attr("class");
+						color = new Color("color", index);
+						d3.selectAll(`.${parent}-lightingEnergy`).attr("fill", (d) => color.dark);
+						d3.selectAll(`.${parent}-heatingEnergy`).attr("fill", `url(#heating-hatch-${index})`);
+						d3.selectAll(`.${parent}-coolingEnergy`).attr("fill", `url(#cooling-hatch-${index})`);
 						tooltip.style("display", "none");
 					}),
 
@@ -827,11 +931,47 @@ function getStrategyNameText(data) {
 	return text;
 }
 
-function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
-	containerId = "#selected-strategy-energy-stacked-bar-plot";
+function updateSelectedStrategyMonthlyEnergyBarPlot(strategyDataLibrary) {
+	containerId = "#selected-strategy-monthly-energy-bar-plot";
 	const margin = new Margin(120, 20, 50, 70);
 	const plotLayout = new PlotLayout(850, 300, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
+
+	const defs = svg.append("defs");
+
+	strategyDataLibrary.forEach((d, index) => {
+		color = new Color("color", index);
+
+		const heatingPattern = defs
+			.append("pattern")
+			.attr("id", `monthly-heating-hatch-${index}`)
+			.attr("patternUnits", "userSpaceOnUse")
+			.attr("width", 8)
+			.attr("height", 8);
+
+		heatingPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", color.default);
+
+		heatingPattern
+			.append("path")
+			.attr("d", "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4")
+			.attr("stroke", "white")
+			.attr("stroke-width", 2);
+
+		const coolingPattern = defs
+			.append("pattern")
+			.attr("id", `monthly-cooling-hatch-${index}`)
+			.attr("patternUnits", "userSpaceOnUse")
+			.attr("width", 8)
+			.attr("height", 8);
+
+		coolingPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", color.light);
+
+		coolingPattern
+			.append("path")
+			.attr("d", "M-2,6 l4,4 M0,0 l8,8 M6,-2 l4,4")
+			.attr("stroke", "white")
+			.attr("stroke-width", 2);
+	});
 
 	const data = strategyDataLibrary.flatMap((d) => {
 		return {
@@ -845,6 +985,7 @@ function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 			})),
 		};
 	});
+	console.log("plotog1", data);
 
 	// months
 	const xscale1 = d3
@@ -889,10 +1030,41 @@ function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 		.text("**Hover over each bar to see strategy details");
 
 	color = new Color("color", 0);
+
+	const heatingLegendPattern = defs
+		.append("pattern")
+		.attr("id", "monthly-heating-legend-pattern")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	heatingLegendPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "white");
+
+	heatingLegendPattern
+		.append("path")
+		.attr("d", "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4")
+		.attr("stroke", "#4197b4")
+		.attr("stroke-width", 2);
+
+	const coolingLegendPattern = defs
+		.append("pattern")
+		.attr("id", "monthly-cooling-legend-pattern")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	coolingLegendPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "white");
+
+	coolingLegendPattern
+		.append("path")
+		.attr("d", "M-2,6 l4,4 M0,0 l8,8 M6,-2 l4,4")
+		.attr("stroke", "#4197b4")
+		.attr("stroke-width", 2);
+
 	const colorScale = d3
 		.scaleOrdinal()
 		.domain(["lightingEnergy", "heatingEnergy", "coolingEnergy"])
-		.range([color.dark, color.default, color.light]);
+		.range(["#4197b4", "url(#monthly-heating-legend-pattern)", "url(#monthly-cooling-legend-pattern)"]);
 
 	addLegend(svg, plotLayout, colorScale);
 
@@ -901,18 +1073,18 @@ function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 		const stackData = stack(d.values);
 
 		const bars = svg
-			.selectAll(`.selected-strategy-bars-${d.id}`)
+			.selectAll(`.selected-strategy-monthly-bars-${d.id}`)
 			.data(stackData)
 			.join(
 				(enter) => {
-					const barsEnter = enter.append("g").attr("class", `selected-strategy-bars-${d.id}`);
+					const barsEnter = enter.append("g").attr("class", `selected-strategy-monthly-bars-${d.id}`);
 
 					barsEnter
 						.append("g")
-						.attr("class", (j) => `.selected-strategy-bars-${d.id}-${j.key}`)
+						.attr("class", (j) => `selected-strategy-bars-${d.id}-${j.key}`)
 						.each(function (j) {
-							updateRectsSelectedStrategy(
-								`selected-strategy-bars-${d.id}-${j.key}`,
+							updateRectsSelectedStrategyMonthly(
+								`selected-strategy-monthly-bars-${d.id}-${j.key}`,
 								xscale,
 								yscale,
 								plotLayout,
@@ -931,11 +1103,196 @@ function updateSelectedStrategyEnergyBarPlot(strategyDataLibrary) {
 	});
 }
 
+function updateSelectedStrategyAnnualEnergyBarPlot(strategyDataLibrary) {
+	const containerId = "#selected-strategy-annual-energy-bar-plot";
+	const margin = new Margin(120, 20, 50, 70);
+	const plotLayout = new PlotLayout(550, 300, margin);
+	const svg = createSVGContainer(containerId, plotLayout);
+
+	const defs = svg.append("defs");
+
+	strategyDataLibrary.forEach((d, index) => {
+		color = new Color("color", index);
+
+		const heatingPattern = defs
+			.append("pattern")
+			.attr("id", `heating-hatch-${index}`)
+			.attr("patternUnits", "userSpaceOnUse")
+			.attr("width", 8)
+			.attr("height", 8);
+
+		heatingPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", color.default);
+
+		heatingPattern
+			.append("path")
+			.attr("d", "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4")
+			.attr("stroke", "white")
+			.attr("stroke-width", 2);
+
+		const coolingPattern = defs
+			.append("pattern")
+			.attr("id", `cooling-hatch-${index}`)
+			.attr("patternUnits", "userSpaceOnUse")
+			.attr("width", 8)
+			.attr("height", 8);
+
+		coolingPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", color.light);
+
+		coolingPattern
+			.append("path")
+			.attr("d", "M-2,6 l4,4 M0,0 l8,8 M6,-2 l4,4")
+			.attr("stroke", "white")
+			.attr("stroke-width", 2);
+	});
+
+	const data = strategyDataLibrary.map((d, index) => {
+		return {
+			...d,
+			strategyIndex: index,
+			lightingEnergy: d.data.values.annual.lighting_energy_kwh,
+			heatingEnergy: d.data.values.annual.heating_energy_kwh,
+			coolingEnergy: d.data.values.annual.cooling_energy_kwh,
+		};
+	});
+
+	console.log("plot", data);
+
+	const xscale = d3
+		.scaleBand()
+		.domain(data.map((d) => d.index))
+		.rangeRound([0, plotLayout.plotWidth])
+		.padding(0.05);
+
+	const yscale = d3
+		.scaleLinear()
+		.domain([0, d3.max(data.map((d) => d.heatingEnergy + d.coolingEnergy + d.lightingEnergy))])
+		.nice()
+		.rangeRound([plotLayout.plotHeight, 0]);
+
+	const axes = addAxes(svg, xscale, yscale, plotLayout);
+	addXLabel(svg, plotLayout, "Strategy Number");
+	addYLabel(svg, plotLayout, "Energy (kWh)");
+
+	svg.append("text")
+		.attr("class", "axis-label")
+		.attr("x", plotLayout.plotWidth / 2)
+		.attr("y", plotLayout.plotHeight + 70)
+		.attr("text-anchor", "middle")
+		.style("font-size", "12pt")
+		.style("fill", "gray")
+		.style("font-style", "italic")
+		.text("**Hover over each bar to see strategy details");
+
+	color = new Color("color", 0);
+
+	const heatingLegendPattern = defs
+		.append("pattern")
+		.attr("id", "heating-legend-pattern")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	heatingLegendPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "white");
+
+	heatingLegendPattern
+		.append("path")
+		.attr("d", "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4")
+		.attr("stroke", "#4197b4")
+		.attr("stroke-width", 2);
+
+	const coolingLegendPattern = defs
+		.append("pattern")
+		.attr("id", "cooling-legend-pattern")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	coolingLegendPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "white");
+
+	coolingLegendPattern
+		.append("path")
+		.attr("d", "M-2,6 l4,4 M0,0 l8,8 M6,-2 l4,4")
+		.attr("stroke", "#4197b4")
+		.attr("stroke-width", 2);
+
+	const colorScale = d3
+		.scaleOrdinal()
+		.domain(["lightingEnergy", "heatingEnergy", "coolingEnergy"])
+		.range(["#4197b4", "url(#heating-legend-pattern)", "url(#cooling-legend-pattern)"]);
+
+	addLegend(svg, plotLayout, colorScale);
+
+	data.forEach((d, index) => {
+		const stack = d3.stack().keys(["lightingEnergy", "heatingEnergy", "coolingEnergy"]);
+		const stackData = stack([d]);
+
+		const bars = svg
+			.selectAll(`.selected-strategy-annual-bars-${d.id}`)
+			.data(stackData)
+			.join(
+				(enter) => {
+					const barsEnter = enter.append("g").attr("class", `selected-strategy-annual-bars-${d.id}`);
+
+					barsEnter
+						.append("g")
+						.attr("class", (j) => `selected-strategy-annual-bars-${d.id}-${j.key}`)
+						.each(function (j) {
+							updateRectsSelectedStrategyAnnual(
+								`selected-strategy-annual-bars-${d.id}-${j.key}`,
+								xscale,
+								yscale,
+								plotLayout,
+								d3.select(this),
+								index,
+								j.key
+							);
+						});
+
+					return barsEnter;
+				},
+				(update) => update,
+				(exit) => exit.remove()
+			);
+	});
+}
+
 function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
-	const containerId = "#all-strategy-energy-stacked-bar-plot";
+	const containerId = "#all-strategy-energy-bar-plot";
 	const margin = new Margin(60, 20, 100, 100);
 	const plotLayout = new PlotLayout(580, 2000, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
+
+	const defs = svg.append("defs");
+
+	const heatingAllPattern = defs
+		.append("pattern")
+		.attr("id", "all-heating-hatch")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	heatingAllPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "darkgray");
+
+	heatingAllPattern
+		.append("path")
+		.attr("d", "M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4")
+		.attr("stroke", "white")
+		.attr("stroke-width", 2);
+
+	const coolingAllPattern = defs
+		.append("pattern")
+		.attr("id", "all-cooling-hatch")
+		.attr("patternUnits", "userSpaceOnUse")
+		.attr("width", 8)
+		.attr("height", 8);
+
+	coolingAllPattern.append("rect").attr("width", 8).attr("height", 8).attr("fill", "lightgray");
+
+	coolingAllPattern
+		.append("path")
+		.attr("d", "M-2,6 l4,4 M0,0 l8,8 M6,-2 l4,4")
+		.attr("stroke", "white")
+		.attr("stroke-width", 2);
 
 	const data = allStrategyLibrary.map((d) => {
 		return {
@@ -973,7 +1330,6 @@ function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
 
 	const xAxisTop = d3.axisTop(xscale).ticks(5).tickPadding(10);
 
-	// Add the x-axis
 	svg.append("g").attr("class", "axis-label x-axis").attr("transform", `translate(0,0)`).call(xAxisTop);
 
 	addXLabel(svg, plotLayout, "Energy (kWh)");
@@ -981,8 +1337,8 @@ function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
 
 	svg.append("text")
 		.attr("class", "axis-label")
-		.attr("x", plotLayout.plotWidth / 2) // Center the label
-		.attr("y", plotLayout.plotHeight + 70) // Adjust the vertical position
+		.attr("x", plotLayout.plotWidth / 2)
+		.attr("y", plotLayout.plotHeight + 70)
 		.attr("text-anchor", "middle")
 		.style("font-size", "12pt")
 		.style("fill", "gray")
@@ -992,8 +1348,7 @@ function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
 	const colorScale = d3
 		.scaleOrdinal()
 		.domain(["lightingEnergy", "heatingEnergy", "coolingEnergy"])
-		// .range(["gray", "#4197b4", "#a5d0df"]);
-		.range(["gray", "darkgray", "lightgray"]);
+		.range(["gray", "url(#all-heating-hatch)", "url(#all-cooling-hatch)"]);
 
 	addLegend(svg, plotLayout, colorScale);
 
