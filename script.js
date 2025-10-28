@@ -697,9 +697,8 @@ function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRect
 									coolingEnergy +
 									"<br>" +
 									total
-							)
-							.style("left", event.pageX + 5 + "px")
-							.style("top", event.pageY - 28 + "px");
+							),
+							positionTooltip(event, tooltip);
 					})
 					.on("mouseout", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
