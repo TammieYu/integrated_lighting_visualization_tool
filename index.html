@@ -11,7 +11,26 @@
 				font-family: Arial, sans-serif;
 				margin: 0;
 				padding: 20px;
-				overflow-x: hidden; /* Prevent horizontal scroll */
+				overflow-x: hidden;
+				overflow-y: scroll;
+				scrollbar-gutter: stable;
+			}
+
+			body::-webkit-scrollbar {
+				width: 12px;
+			}
+
+			body::-webkit-scrollbar-track {
+				background: #f1f1f1;
+			}
+
+			body::-webkit-scrollbar-thumb {
+				background: #888;
+				border-radius: 6px;
+			}
+
+			body::-webkit-scrollbar-thumb:hover {
+				background: #555;
 			}
 			h1,
 			h2,
@@ -36,14 +55,32 @@
 				/* border: 2px solid #4caf50; /* Add a border */
 				/* border-radius: 5px; Round the corners of the border */
 			}
-
 			.container {
 				background-color: white;
 				padding: 10px;
 				border: 2px solid #ffffff;
 				border-radius: 8px;
 				box-shadow: 0px 3px 3px rgb(177, 177, 177);
-				overflow: scroll;
+				overflow: auto;
+				scrollbar-gutter: stable;
+			}
+
+			.container::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+
+			.container::-webkit-scrollbar-track {
+				background: #f1f1f1;
+			}
+
+			.container::-webkit-scrollbar-thumb {
+				background: #888;
+				border-radius: 4px;
+			}
+
+			.container::-webkit-scrollbar-thumb:hover {
+				background: #555;
 			}
 			.grid-container {
 				display: grid;
@@ -215,8 +252,69 @@
 					<h3 class="title">Select climate zone</h3>
 					<div id="climate-zone-dropdown"></div>
 				</div>
+			</div>
+			<div class="right-grid-container">
+				<div class="container" style="grid-column: 1/3; grid-row: 1">
+					<h3 class="title" style="font-size: 20pt" id="climate-energy-bar-title"></h3>
+				</div>
+			</div>
+			<div class="container" style="grid-column: 1/3; margin-bottom: -70px; height: 200px">
+				<h3 class="title">Strategy Descriptions</h3>
+				<div style="margin-top: 10px">
+					<h4>Heating Systems</h4>
+					<p>
+						<b>* Gas Furnace</b>: Natural gas furnace for primary heating, electric two-speed direct
+						expansion (DX) coil for cooling, and electric coils in VAV terminals for zone temperature
+						control.<br />
+						<b>* Heat Pump</b>: Electric air-to-water heat pump generating chilled and hot water for both
+						central air handling units and zone reheat coils.
+					</p>
+					<div>
+						<h4>Glazing Materials</h4>
+						<p>
+							<b>* Single Pane - Clear</b>: single 3 mm clear pane with no coatings. <br />
+							<b>* Double Pane - Clear</b>: double 3 mm clear panes with no coatings. <br />
+							<b>* Triple Pane - Clear</b>: triple 3 mm clear panes with no coatings.
+						</p>
+					</div>
+					<div>
+						<h4>Shading Materials</h4>
+						<p>
+							<b>* Exterior Shade - tvis 3% Dark </b>: dark‑gray basket‑weave fabric shades (2 % openness
+							factor, visible transmittance of  0.031). <br /><b>* Interior Shade - tvis 3% Dark</b>:
+							dark‑gray basket‑weave fabric shades (2 % openness factor, visible transmittance of  0.031).
+						</p>
+					</div>
+					<div>
+						<h4>Daylight Dimming</h4>
+						<p>
+							<b>*On</b>: Artificial lighting dims linearly based on daylight to maintain 500 lux
+							workplane illuminance for office tasks. When integrated with the shading control algorithm,
+							the lighting system responds to the resulting illuminance levels from adjusted shade
+							position. <br /><b>*Off</b>: Artificial lighting remains at full power during occupied hours
+							regardless of daylight availability.
+						</p>
+					</div>
+					<div>
+						<h4>Control</h4>
+						<p>
+							<b>*None</b>: No shading control is applied. <br /><b>*Manual: Always 2/3 Shaded</b>:
+							Windows remain consistently two-thirds shaded, simulating infrequent occupuant adjustments
+							in typical office settings. <br /><b>*Manual: Dynamic</b>: Rule-based algorithm adjusts
+							shades across four positions (fully open to fully closed) based on exterior vertical
+							illuminance thresholds from 33,000 to 100,000 lux, with hysteresis to model delayed occupant
+							responses. <br /><b>*Auto: Daylight and glare control</b>: Shades open fully when incident
+							solar radiation is below 200 W/m² to maximize daylight; otherwise, close to minimize solar
+							heat gain. <br /><b>*Auto: Incident Radiation Control</b>: Hierarchical algorithm adjusts
+							shades across four positions based on solar altitude, sky conditions (cloudy or sunny), and
+							brightness limits (3,500 lux) while maintaining thermal loads under 78 W/m² and sun
+							penetration under 1 meter during clear sky conditions.
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="left-grid-container" style="gap: 10px">
 				<div class="container" style="grid-column: 1; grid-row: 2">
-					<h3 class="title" id="shading-control-info1">All strategies</h3>
 					<br />
 					<table id="strategy-lookup-table">
 						<thead>
@@ -245,13 +343,10 @@
 				</div>
 			</div>
 			<div class="right-grid-container">
-				<div class="container" style="grid-column: 1/3; grid-row: 1">
-					<h3 class="title" style="font-size: 20pt" id="climate-energy-bar-title"></h3>
-				</div>
 				<div class="container" style="grid-column: 1/3; grid-row: 2">
 					<h3 class="title">Select strategy to add to strategy library</h3>
 					<div class="dropdown">
-						<div style="display: flex; column-gap: 10vw">
+						<div style="display: flex; column-gap: 9vw">
 							<div>
 								<h4>Heating system</h4>
 								<div id="heating-system-radio"></div>
@@ -264,7 +359,7 @@
 								<button class="button" id="strategy-add-button">Add</button>
 							</div>
 						</div>
-						<div style="display: flex; column-gap: 10vw">
+						<div style="display: flex; column-gap: 9vw">
 							<div>
 								<h4>Glazing material</h4>
 								<div id="glazing-material-dropdown"></div>
@@ -274,7 +369,7 @@
 								<div id="shading-material-dropdown"></div>
 							</div>
 							<div>
-								<h4 id="shading-control-info2">Shading control</h4>
+								<h4>Shading control</h4>
 								<div id="shading-control-dropdown"></div>
 							</div>
 						</div>

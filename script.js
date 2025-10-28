@@ -234,30 +234,40 @@ d3.json(dataUrl).then((resultData) => {
 	});
 });
 
-function addInfoIcons() {
-	createShadingControlInfoIcon("#shading-control-info1");
-	createShadingControlInfoIcon("#shading-control-info2");
-	createPeakLoadInfoIcon("#peak-load-info");
+function positionTooltip(event, tooltip) {
+	const tooltipNode = tooltip.node();
+	const tooltipWidth = tooltipNode.offsetWidth;
+	const tooltipHeight = tooltipNode.offsetHeight;
+	const padding = 10; // padding from edges
+
+	let left = event.pageX + 5;
+	let top = event.pageY - 28;
+
+	// Check if tooltip goes beyond right edge of viewport
+	if (left + tooltipWidth > window.innerWidth - padding) {
+		left = event.pageX - tooltipWidth - 5;
+	}
+
+	// Check if tooltip goes beyond bottom edge of viewport
+	if (top + tooltipHeight > window.innerHeight + window.scrollY - padding) {
+		top = event.pageY - tooltipHeight - 5;
+	}
+
+	// Check if tooltip goes beyond top edge
+	if (top < window.scrollY + padding) {
+		top = event.pageY + 20;
+	}
+
+	// Check if tooltip goes beyond left edge
+	if (left < padding) {
+		left = padding;
+	}
+
+	tooltip.style("left", `${left}px`).style("top", `${top}px`);
 }
 
-function createShadingControlInfoIcon(id) {
-	const always60percentshaded = `<strong>Manual: Always 2/3 Shaded</strong><br>The shade is always two-thirds of the way down.`;
-	const vdwmanual = `<strong>Manual: Dynamic</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down based on incident vertical illuminance. Hysteresis effect is applied to account for delay.`;
-	const daylightctrl = `<strong>Auto: Daylight and Glare Control</strong><br>The shade can be adjusted to fully open or closed, one-third of the way down, or two-thirds of the way down. The shade controller inputs include sky cloud coverage, thermal load, indoor brightness, and daylight penetration depth. It is optimized to reduce energy consumption and visual comfort.`;
-	const irradiance = `<strong>Auto: Incident Radiation Control</strong><br>The shade can be adjusted to fully open or closed based on the incident solar radiation threshold of 200 W/m2.`;
-	const content =
-		always60percentshaded + "<br><br>" + vdwmanual + "<br><br>" + daylightctrl + "<br><br>" + irradiance;
-
-	const svg = d3
-		.select(id)
-		.append("svg")
-		.attr("width", 20)
-		.attr("height", 20)
-		.style("display", "inline-block")
-		.style("vertical-align", "middle")
-		.style("margin-left", "5px");
-
-	createInfoIcon(svg, 10, 10, content);
+function addInfoIcons() {
+	createPeakLoadInfoIcon("#peak-load-info");
 }
 
 function createPeakLoadInfoIcon(id) {
@@ -612,29 +622,14 @@ function createInfoIcon(parent, x, y, content) {
 		.style("font-weight", "normal")
 		.on("mouseover", (event) => {
 			tooltip.style("display", "block").html(content);
-			updateTooltipPosition(event);
+			positionTooltip(event, tooltip);
 		})
 		.on("mousemove", (event) => {
-			updateTooltipPosition(event);
+			positionTooltip(event, tooltip);
 		})
 		.on("mouseout", () => {
 			tooltip.style("display", "none");
 		});
-
-	function updateTooltipPosition(event) {
-		const tooltipWidth = tooltip.node().offsetWidth; // Get tooltip width
-		const tooltipHeight = tooltip.node().offsetHeight; // Get tooltip height
-		let left = event.pageX + 5;
-		let top = event.pageY - 28;
-
-		// Check if tooltip goes beyond right edge of viewport
-		if (left + tooltipWidth > window.innerWidth) {
-			left = window.innerWidth - tooltipWidth - 100; // Adjust left position
-		}
-
-		// Update tooltip position
-		tooltip.style("left", `${left}px`).style("top", `${top}px`);
-	}
 }
 
 function updateRectsAllStrategy(className, xscale, yscale, plotLayout, childRects, energyType) {
@@ -762,6 +757,7 @@ function updateRectsSelectedStrategyMonthly(
 							.attr("y", (d) => yscale(d[1]))
 							.attr("height", (d) => yscale(d[0]) - yscale(d[1]))
 					)
+
 					.on("mouseover", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
 						color = new Color("gray", 0);
@@ -795,9 +791,11 @@ function updateRectsSelectedStrategyMonthly(
 									coolingEnergy +
 									"<br>" +
 									total
-							)
-							.style("left", event.pageX + 5 + "px")
-							.style("top", event.pageY - 28 + "px");
+							);
+						positionTooltip(event, tooltip);
+					})
+					.on("mousemove", (event) => {
+						positionTooltip(event, tooltip);
 					})
 					.on("mouseout", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
@@ -887,9 +885,8 @@ function updateRectsSelectedStrategyAnnual(className, xscale, yscale, plotLayout
 									coolingEnergy +
 									"<br>" +
 									total
-							)
-							.style("left", event.pageX + 5 + "px")
-							.style("top", event.pageY - 28 + "px");
+							);
+						positionTooltip(event, tooltip);
 					})
 					.on("mouseout", function (event, d) {
 						const parent = d3.select(this.parentNode.parentNode).attr("class");
@@ -1105,7 +1102,7 @@ function updateSelectedStrategyMonthlyEnergyBarPlot(strategyDataLibrary) {
 
 function updateSelectedStrategyAnnualEnergyBarPlot(strategyDataLibrary) {
 	const containerId = "#selected-strategy-annual-energy-bar-plot";
-	const margin = new Margin(120, 20, 50, 70);
+	const margin = new Margin(120, 20, 50, 100);
 	const plotLayout = new PlotLayout(550, 300, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
 
@@ -1176,7 +1173,7 @@ function updateSelectedStrategyAnnualEnergyBarPlot(strategyDataLibrary) {
 	svg.append("text")
 		.attr("class", "axis-label")
 		.attr("x", plotLayout.plotWidth / 2)
-		.attr("y", plotLayout.plotHeight + 70)
+		.attr("y", plotLayout.plotHeight + 90)
 		.attr("text-anchor", "middle")
 		.style("font-size", "12pt")
 		.style("fill", "gray")
@@ -1259,7 +1256,7 @@ function updateSelectedStrategyAnnualEnergyBarPlot(strategyDataLibrary) {
 function updateAllStrategyEnergyBarPlot(allStrategyLibrary) {
 	const containerId = "#all-strategy-energy-bar-plot";
 	const margin = new Margin(60, 20, 100, 100);
-	const plotLayout = new PlotLayout(580, 2000, margin);
+	const plotLayout = new PlotLayout(550, 2000, margin);
 	const svg = createSVGContainer(containerId, plotLayout);
 
 	const defs = svg.append("defs");
@@ -1574,11 +1571,8 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 			.on("mouseover", function (event, d) {
 				d3.selectAll(`.line-${index}`).attr("opacity", 0.5);
 				const name = getStrategyNameText(d[0]);
-				tooltip
-					.style("display", "block")
-					.html(name + "<br> <br> <i>** hover over a point to see values</i>")
-					.style("left", event.pageX + 5 + "px")
-					.style("top", event.pageY - 28 + "px");
+				tooltip.style("display", "block").html(name + "<br> <br> <i>** hover over a point to see values</i>");
+				positionTooltip(event, tooltip);
 			})
 			.on("mouseout", function (event, d) {
 				d3.selectAll(`.line-${index}`).attr("opacity", 1);
@@ -1601,12 +1595,8 @@ function updateSelectedStrategyPeakLoadLinePlot(strategyDataLibrary, energyType,
 				const energy = `<strong>${camelToCapitalizedCase(energyType)} Energy:</strong> ${d[
 					`${energyType}Energy`
 				].toFixed(2)} kw`;
-
-				tooltip
-					.style("display", "block")
-					.html(name + "<br> <br>" + energy)
-					.style("left", event.pageX + 5 + "px")
-					.style("top", event.pageY - 28 + "px");
+				tooltip.style("display", "block").html(name + "<br> <br>" + energy);
+				positionTooltip(event, tooltip);
 			})
 			.on("mouseout", function (event, d) {
 				d3.selectAll(`.line-${index}`).attr("opacity", 1);
